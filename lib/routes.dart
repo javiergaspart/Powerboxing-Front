@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/navbar/my_profile_screen.dart';
 import 'screens/dashboard/home_screen.dart';
-import 'screens/dashboard/profile_screen.dart';
 import 'screens/reservation/location_select_screen.dart';
 import 'screens/reservation/calendar_screen.dart';
 import 'screens/reservation/payment_screen.dart';
@@ -33,7 +33,8 @@ class AppRoutes {
 
       // User Profile Screen
       case profile:
-        return MaterialPageRoute(builder: (_) => ProfileScreen());
+        final User user = settings.arguments as User;  // Extract the user object from the arguments
+        return MaterialPageRoute(builder: (_) => MyProfileScreen(user: user,));
 
       // Location Selection Screen
       case locationSelect:
