@@ -2,13 +2,13 @@ Analyzing Frontend_Fitboxing...
 
 warning - The include file 'package:flutter_lints/flutter.yaml' in 'C:\Users\javie\Frontend_Fitboxing\analysis_options.yaml' can't be found when analyzing 'C:\Users\javie\Frontend_Fitboxing' - analysis_options.yaml:10:10 - include_file_not_found
 warning - Unused import: 'package:fitboxing_app/screens/dashboard/reservation_successful_screen.dart' - lib\main.dart:1:8 - unused_import
-  error - Undefined class 'UserModel' - lib\providers\auth_provider.dart:6:3 - undefined_class
-  error - Undefined class 'UserModel' - lib\providers\auth_provider.dart:9:3 - undefined_class
-  error - Undefined class 'UserModel' - lib\providers\user_provider.dart:5:3 - undefined_class
-  error - Undefined class 'UserModel' - lib\providers\user_provider.dart:8:3 - undefined_class
-  error - Undefined class 'UserModel' - lib\providers\user_provider.dart:11:16 - undefined_class
-  error - Undefined class 'UserModel' - lib\routes.dart:31:15 - undefined_class
-  error - The name 'UserModel' isn't a type, so it can't be used in an 'as' expression - lib\routes.dart:31:49 - cast_to_non_type
+  error - Undefined class 'User' - lib\providers\auth_provider.dart:6:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\auth_provider.dart:9:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\user_provider.dart:5:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\user_provider.dart:8:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\user_provider.dart:11:16 - undefined_class
+  error - Undefined class 'User' - lib\routes.dart:31:15 - undefined_class
+  error - The name 'User' isn't a type, so it can't be used in an 'as' expression - lib\routes.dart:31:49 - cast_to_non_type
   error - Undefined class 'User' - lib\routes.dart:36:15 - undefined_class
   error - The name 'User' isn't a type, so it can't be used in an 'as' expression - lib\routes.dart:36:49 - cast_to_non_type
   error - Undefined class 'User' - lib\screens\auth\login_screen.dart:33:7 - undefined_class
