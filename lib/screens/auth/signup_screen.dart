@@ -13,6 +13,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();  // Added phone number controller
   bool _isLoading = false;
 
   // Function to handle signup
@@ -26,11 +27,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'username': _usernameController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
+        'phone': _phoneController.text,  // Include phone number
       });
+
       User user = await _authService.signUp(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
+        _phoneController.text,  // Pass phone number
       );
 
       // Navigate to home screen after successful signup
@@ -84,12 +88,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
             SizedBox(height: 16),
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',  // Added phone number input
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
             _isLoading
                 ? CircularProgressIndicator()
                 : ElevatedButton(
-                    onPressed: _signUp,
-                    child: Text('Sign Up'),
-                  ),
+              onPressed: _signUp,
+              child: Text('Sign Up'),
+            ),
           ],
         ),
       ),

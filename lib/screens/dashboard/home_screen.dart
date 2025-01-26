@@ -8,13 +8,12 @@ import 'package:intl/intl.dart';
 import '../../models/user_model.dart';
 import '../navbar/membership_screen.dart';
 import '../navbar/my_profile_screen.dart';
-import '../navbar/membership_screen.dart';
 import '../navbar/contact_us_screen.dart';
 import '../navbar/settings_screen.dart';
 import '../../styles/styles.dart'; // Import the styles file
 
 class HomeScreen extends StatefulWidget {
-  final User user;
+  final UserModel user;
 
   const HomeScreen({Key? key, required this.user}) : super(key: key);
 
@@ -38,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'profile':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyProfileScreen(user: widget.user,)),
+          MaterialPageRoute(builder: (context) => MyProfileScreen(user: widget.user)),
         );
         break;
       case 'about':
@@ -66,13 +65,11 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
       case 'logout':
-      // Handle logout logic (e.g., clearing user data, navigating to login screen)
         Navigator.popUntil(context, ModalRoute.withName('/'));
         print("Logged out");
         break;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -97,23 +94,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Profile Photo with dark grey border
                       Container(
-                        width: 100, // Fixed width
-                        height: 100, // Fixed height
+                        width: 100,
+                        height: 100,
                         decoration: AppImageStyles.profileImageDecoration(
                           hasProfileImage: widget.user.profileImage != null && widget.user.profileImage!.isNotEmpty,
                           profileImageUrl: widget.user.profileImage ?? '',
                         ),
                       ),
-                      SizedBox(width: 8), // Add space between profile photo and text
-                      // Welcome Text
+                      SizedBox(width: 8),
+                      // Welcome Text with Session Balance
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.user.username,
-                            style: AppTextStyles.welcomeText.copyWith(fontWeight: FontWeight.bold), // Bold username
+                            style: AppTextStyles.welcomeText.copyWith(fontWeight: FontWeight.bold),
                           ),
                           SizedBox(height: 8),
+                          Text(
+                            'Available Sessions: ${widget.user.sessionBalance}',
+                            style: AppTextStyles.sectionTitle.copyWith(color: Colors.green),
+                          ),
                         ],
                       ),
                     ],
@@ -122,32 +123,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   PopupMenuButton<String>(
                     onSelected: _handleMenuItemSelected,
                     itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'profile',
-                        child: Text('My Profile'),
-                      ),
-                      PopupMenuItem(
-                        value: 'about',
-                        child: Text('About Us'),
-                      ),
-                      PopupMenuItem(
-                        value: 'membership',
-                        child: Text('Membership'),
-                      ),
-                      PopupMenuItem(
-                        value: 'contact',
-                        child: Text('Contact Us'),
-                      ),
-                      PopupMenuItem(
-                        value: 'settings',
-                        child: Text('Settings'),
-                      ),
-                      PopupMenuItem(
-                        value: 'logout',
-                        child: Text('Log Out'),
-                      ),
+                      PopupMenuItem(value: 'profile', child: Text('My Profile')),
+                      PopupMenuItem(value: 'about', child: Text('About Us')),
+                      PopupMenuItem(value: 'membership', child: Text('Membership')),
+                      PopupMenuItem(value: 'contact', child: Text('Contact Us')),
+                      PopupMenuItem(value: 'settings', child: Text('Settings')),
+                      PopupMenuItem(value: 'logout', child: Text('Log Out')),
                     ],
-                    icon: Icon(Icons.menu), // Three horizontal lines icon
+                    icon: Icon(Icons.menu),
                   ),
                 ],
               ),
@@ -156,12 +139,18 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ReservationScreen(),
-                    ),
-                  );
+                  if (widget.user.sessionBalance > 0) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReservationScreen(),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('No available sessions. Please purchase more.')),
+                    );
+                  }
                 },
                 child: Text('Reserve Session'),
               ),
@@ -208,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   );
-                }  else {
+                } else {
                   return Center(child: Text('No upcoming sessions found.'));
                 }
               },
