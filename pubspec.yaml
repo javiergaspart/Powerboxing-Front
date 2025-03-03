@@ -1,0 +1,28 @@
+name: powerboxing_front
+description: Powerboxing mobile app for trainers and boxers.
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  http: ^0.13.5 # Add dependencies as needed
+  intl: ^0.20.2
+  shared_preferences: ^2.5.2
+  jwt_decoder: ^2.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
