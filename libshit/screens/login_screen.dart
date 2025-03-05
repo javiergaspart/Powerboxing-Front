@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'boxer_dashboard.dart';
+import 'trainer_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -25,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:10000/api/auth/login'), // ✅ Ensure this URL is correct
+        Uri.parse('http://localhost:10000/api/auth/login'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email, "password": password}),
       );
@@ -36,10 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        Navigator.pushReplacementNamed(context, '/user-dashboard', arguments: {
-          'token': responseData['token'],
-          'userName': responseData['userName'],
-        });
+        bool isTrainer = responseData['role'] == 'trainer';
+        
+        Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (context) => BoxerDashboard(
+      token: responseData['token'],
+      userId: responseData['userId'], // ✅ Ensure this is passed
+    ),
+  ),
+);
       } else {
         setState(() {
           _errorMessage = responseData['message'] ?? "Login failed";
@@ -72,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _login, // ✅ Ensure this function is called
+              onPressed: _login,
               child: Text("Login"),
             ),
             if (_errorMessage.isNotEmpty) ...[

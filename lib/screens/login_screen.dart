@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
@@ -8,86 +8,96 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  String _errorMessage = '';
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool isLoading = false;
+  String errorMessage = "";
 
-  Future<void> _login() async {
-    final String email = _emailController.text.trim();
-    final String password = _passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      setState(() {
-        _errorMessage = "Please enter email and password.";
-      });
-      return;
-    }
+  Future<void> loginUser() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = "";
+    });
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:10000/api/auth/login'), // ✅ Ensure this URL is correct
+        Uri.parse("http://localhost:10000/api/auth/login"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
+        body: jsonEncode({
+          "email": emailController.text,
+          "password": passwordController.text,
+        }),
       );
 
-      print("🔍 API Response Code: ${response.statusCode}");
-      print("🔍 API Response Body: ${response.body}");
-
-      final responseData = jsonDecode(response.body);
-
       if (response.statusCode == 200) {
-        bool isTrainer = responseData['role'] == 'trainer'; // ✅ Check user role
+        final responseData = jsonDecode(response.body);
+        String role = responseData['role'];
+        String token = responseData['token'];
+        String userId = responseData['userId'] ?? "";
 
-        if (isTrainer) {
-          Navigator.pushReplacementNamed(context, '/trainer-dashboard', arguments: {
-            'trainerId': responseData['trainerId'],
-            'token': responseData['token'],
-          });
+        if (role == "trainer") {
+          Navigator.pushReplacementNamed(
+            context,
+            '/trainer-dashboard',
+            arguments: {
+              "token": token,
+              "trainerId": userId,
+            },
+          );
+        } else if (role == "boxer") {
+          Navigator.pushReplacementNamed(
+            context,
+            '/boxer-dashboard',
+            arguments: {
+              "token": token,
+              "userId": userId,
+            },
+          );
         } else {
-          Navigator.pushReplacementNamed(context, '/user-dashboard', arguments: {
-            'userName': responseData['userName'],
-            'token': responseData['token'],
+          setState(() {
+            errorMessage = "Invalid user role. Contact support.";
           });
         }
       } else {
         setState(() {
-          _errorMessage = responseData['message'] ?? "Login failed";
+          errorMessage = "Invalid email or password.";
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = "Network error. Please try again.";
+        errorMessage = "Network error: $e";
       });
-      print("❌ Network Error: $e");
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(title: Text("PowerBoxing Login")),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
+            Text("Email", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            TextField(controller: emailController),
+            SizedBox(height: 10),
+            Text("Password", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            TextField(controller: passwordController, obscureText: true),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _login, // ✅ Ensure this function is called
-              child: Text("Login"),
-            ),
-            if (_errorMessage.isNotEmpty) ...[
-              SizedBox(height: 10),
-              Text(_errorMessage, style: TextStyle(color: Colors.red)),
-            ]
+            if (errorMessage.isNotEmpty)
+              Text(errorMessage, style: TextStyle(color: Colors.red)),
+            SizedBox(height: 20),
+            isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: loginUser,
+                    child: Text("Login"),
+                  ),
           ],
         ),
       ),

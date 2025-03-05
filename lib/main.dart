@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
-import 'screens/user_dashboard.dart';
+import 'screens/boxer_dashboard.dart';
 import 'screens/trainer_dashboard.dart';
 
 void main() {
@@ -18,16 +18,16 @@ class MyApp extends StatelessWidget {
       ),
       home: LoginScreen(),
       routes: {
-        '/user-dashboard': (context) {
+        '/boxer-dashboard': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map?;
-          return UserDashboard(
+          return BoxerDashboard(
             token: args?['token'] ?? "",  
           );
         },
         '/trainer-dashboard': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map?;
           return TrainerDashboard(
-            trainerName: args?['trainerName'] ?? "Trainer",
+            trainerId: args?['trainerId'] ?? "67bf58c5a45585d3ead2c4e5",
             token: args?['token'] ?? "",
           );
         },

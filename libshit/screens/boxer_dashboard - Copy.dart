@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:jwt_decoder/jwt_decoder.dart';
 
 class BoxerDashboard extends StatefulWidget {
   final String token;
@@ -13,58 +12,34 @@ class BoxerDashboard extends StatefulWidget {
 }
 
 class _BoxerDashboardState extends State<BoxerDashboard> {
-  int sessionBalance = 0;
-  String userId = "";
+  int sessionBalance = 1;
+  int selectedDayIndex = 0;
   final List<String> next7Days = List.generate(7, (index) {
     return DateTime.now().add(Duration(days: index)).toString().substring(0, 10);
   });
+
   Map<String, List<String>> availableSessions = {};
 
   @override
   void initState() {
     super.initState();
+
+    print("🚀 Received Token in BoxerDashboard: '${widget.token}'");
+
     if (widget.token.isEmpty) {
+      print("❌ ERROR: Token is empty in BoxerDashboard. Redirecting to login.");
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/');
       });
     } else {
-      decodeToken();
-    }
-  }
-
-  void decodeToken() {
-    try {
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(widget.token);
-      userId = decodedToken["userId"];
-      fetchSessionBalance();
       fetchAvailableSessions();
-    } catch (e) {
-      print("Error decoding token: $e");
-    }
-  }
-
-  Future<void> fetchSessionBalance() async {
-    try {
-      final response = await http.get(
-        Uri.parse("http://localhost:10000/api/sessions/balance/$userId"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer ${widget.token}",
-        },
-      );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          sessionBalance = data["balance"] ?? 0;
-        });
-      }
-    } catch (e) {
-      print("Error fetching session balance: $e");
     }
   }
 
   Future<void> fetchAvailableSessions() async {
     try {
+      print("🔍 Using Token for API Call: '${widget.token}'");
+
       final response = await http.get(
         Uri.parse("http://localhost:10000/api/sessions/available"),
         headers: {
@@ -72,26 +47,32 @@ class _BoxerDashboardState extends State<BoxerDashboard> {
           "Authorization": "Bearer ${widget.token}",
         },
       );
+
+      print("🔍 Raw API Response: ${response.body}");
+
       if (response.statusCode == 200) {
         dynamic decodedData = jsonDecode(response.body);
+        
         if (decodedData is List) {
+          print("✅ API returned a List instead of a Map. Converting...");
           setState(() {
             availableSessions = {};
-            DateTime now = DateTime.now();
             for (var session in decodedData) {
-              String dateStr = session["date"];
-              String timeStr = session["time"] ?? "00:00";
-              DateTime sessionDateTime = DateTime.parse("$dateStr $timeStr");
-              if (sessionDateTime.isAfter(now)) {
-                String formattedDate = dateStr.substring(0, 10);
-                availableSessions.putIfAbsent(formattedDate, () => []).add(timeStr);
+              for (var slot in session["available_slots"]) {
+                if (slot["date"] != null && slot["time"] != null) {
+                  availableSessions.putIfAbsent(slot["date"], () => []).add(slot["time"]);
+                }
               }
             }
           });
+        } else {
+          print("❌ Unexpected response type: ${decodedData.runtimeType}");
         }
+      } else {
+        print("❌ API Error: ${response.statusCode} - ${response.body}");
       }
     } catch (e) {
-      print("Error fetching available sessions: $e");
+      print("❌ Error fetching sessions from MongoDB: $e");
     }
   }
 

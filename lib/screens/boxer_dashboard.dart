@@ -63,37 +63,60 @@ class _BoxerDashboardState extends State<BoxerDashboard> {
     }
   }
 
-  Future<void> fetchAvailableSessions() async {
-    try {
-      final response = await http.get(
-        Uri.parse("http://localhost:10000/api/sessions/available"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer ${widget.token}",
-        },
-      );
-      if (response.statusCode == 200) {
-        dynamic decodedData = jsonDecode(response.body);
-        if (decodedData is List) {
-          setState(() {
-            availableSessions = {};
-            DateTime now = DateTime.now();
-            for (var session in decodedData) {
-              String dateStr = session["date"];
-              String timeStr = session["time"] ?? "00:00";
-              DateTime sessionDateTime = DateTime.parse("$dateStr $timeStr");
-              if (sessionDateTime.isAfter(now)) {
-                String formattedDate = dateStr.substring(0, 10);
-                availableSessions.putIfAbsent(formattedDate, () => []).add(timeStr);
+Future<void> fetchAvailableSessions() async {
+  try {
+    print("🔍 Fetching available sessions...");
+
+    final response = await http.get(
+      Uri.parse("http://localhost:10000/api/sessions/available"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${widget.token}",
+      },
+    );
+
+    print("🔍 RAW API Response: ${response.body}");
+
+    if (response.statusCode == 200) {
+      dynamic decodedData = jsonDecode(response.body);
+      print("✅ Decoded API Response: $decodedData");
+
+      if (decodedData is List && decodedData.isNotEmpty) {
+        setState(() {
+          availableSessions = {};
+          DateTime now = DateTime.now();
+
+          for (var session in decodedData) {
+            if (session["date"] == null || session["time"] == null) continue; // Skip invalid entries
+
+            String dateStr = session["date"];
+            String timeStr = session["time"];
+            DateTime sessionDateTime = DateTime.parse("$dateStr $timeStr");
+
+            // Filter: Only keep upcoming sessions (including today, but future times only)
+            if (sessionDateTime.isAfter(now)) {
+              String formattedDate = dateStr.substring(0, 10);
+              if (availableSessions.containsKey(formattedDate)) {
+                availableSessions[formattedDate]!.add(timeStr);
+              } else {
+                availableSessions[formattedDate] = [timeStr];
               }
             }
-          });
-        }
+          }
+        });
+
+        print("📆 Available sessions updated: $availableSessions");
+      } else {
+        print("❌ API returned empty list or unexpected format.");
       }
-    } catch (e) {
-      print("Error fetching available sessions: $e");
+    } else {
+      print("❌ API Error: ${response.statusCode}");
     }
+  } catch (e) {
+    print("❌ Error fetching available sessions: $e");
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
