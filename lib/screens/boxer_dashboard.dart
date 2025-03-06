@@ -82,30 +82,27 @@ Future<void> fetchAvailableSessions() async {
       print("✅ Decoded API Response: $decodedData");
 
       if (decodedData is List && decodedData.isNotEmpty) {
+        print("✅ API returned ${decodedData.length} sessions.");
+        
         setState(() {
-          availableSessions = {};
-          DateTime now = DateTime.now();
+          availableSessions = {}; // Clear previous data
 
           for (var session in decodedData) {
-            if (session["date"] == null || session["time"] == null) continue; // Skip invalid entries
+            if (session["date"] == null || session["time"] == null) continue; // Skip invalid data
 
             String dateStr = session["date"];
             String timeStr = session["time"];
-            DateTime sessionDateTime = DateTime.parse("$dateStr $timeStr");
+            print("📆 Processing session for: $dateStr at $timeStr");
 
-            // Filter: Only keep upcoming sessions (including today, but future times only)
-            if (sessionDateTime.isAfter(now)) {
-              String formattedDate = dateStr.substring(0, 10);
-              if (availableSessions.containsKey(formattedDate)) {
-                availableSessions[formattedDate]!.add(timeStr);
-              } else {
-                availableSessions[formattedDate] = [timeStr];
-              }
+            if (availableSessions.containsKey(dateStr)) {
+              availableSessions[dateStr]!.add(timeStr);
+            } else {
+              availableSessions[dateStr] = [timeStr];
             }
           }
         });
 
-        print("📆 Available sessions updated: $availableSessions");
+        print("📆 Updated availableSessions after booking: $availableSessions");
       } else {
         print("❌ API returned empty list or unexpected format.");
       }
@@ -117,6 +114,58 @@ Future<void> fetchAvailableSessions() async {
   }
 }
 
+Future<void> bookSession(String date, String time) async {
+  try {
+    print("📅 Booking session on $date at $time...");
+
+    // Find sessionId from availableSessions
+    final response = await http.get(
+      Uri.parse("http://localhost:10000/api/sessions/available"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${widget.token}",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> sessions = jsonDecode(response.body);
+      var session = sessions.firstWhere(
+        (s) => s["date"] == date && s["time"] == time,
+        orElse: () => null,
+      );
+
+      if (session == null) {
+        print("❌ No matching session found.");
+        return;
+      }
+
+      String sessionId = session["_id"];
+
+      // Send booking request
+      final bookingResponse = await http.post(
+        Uri.parse("http://localhost:10000/api/sessions/book"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${widget.token}",
+        },
+        body: jsonEncode({
+          "userId": userId,
+          "sessionId": sessionId,
+        }),
+      );
+
+      if (bookingResponse.statusCode == 200) {
+        print("✅ Session booked successfully!");
+        fetchSessionBalance(); // Update balance after booking
+        fetchAvailableSessions(); // Refresh available sessions
+      } else {
+        print("❌ Booking failed: ${bookingResponse.body}");
+      }
+    }
+  } catch (e) {
+    print("❌ Error booking session: $e");
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -154,9 +203,11 @@ Future<void> fetchAvailableSessions() async {
                               children: sessions.map((session) => ListTile(
                                     title: Text(session),
                                     trailing: ElevatedButton(
-                                      onPressed: () {},
-                                      child: Text("Book"),
-                                    ),
+  onPressed: () async {
+    await bookSession(day, session);
+  },
+  child: Text("Book"),
+),
                                   )).toList(),
                             )
                           : Center(child: Text("No sessions available"));
