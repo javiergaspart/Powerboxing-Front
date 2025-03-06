@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animated_icons/flutter_animated_icons.dart';
 import '../../styles/my_profile_styles.dart';
 import '../../widgets/energy_bar_chart.dart';
-import '../../models/user_model.dart';
+import 'package:fitboxing_app/models/user_model.dart';
+import 'package:fitboxing_app/providers/user_provider.dart' as user_provider; // ✅ Alias to avoid conflict
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import '../../constants/urls.dart';
+import 'dart:convert';
+import 'package:provider/provider.dart'; // Ensure this is imported
 
 class MyProfileScreen extends StatefulWidget {
   final User user;
@@ -25,10 +32,51 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     _emailController = TextEditingController(text: widget.user.email);
     _contactController = TextEditingController(text: widget.user.contact);
   }
+  Future<String> uploadImage(File imageFile) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${AppUrls.uploadProfileImage}/${widget.user.id}'),
+    );
 
-  void _updateProfileImage() {
-    // Logic to update the profile image from the device
-    print("Edit profile image tapped!");
+    request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      var responseData = await response.stream.bytesToString();
+      return jsonDecode(responseData)['imageUrl']; // Get image URL from API
+    } else {
+      throw Exception("Failed to upload image");
+    }
+  }
+
+  // Handle profile image update
+  void _updateProfileImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      File file = File(image.path);
+      String imageUrl = await uploadImage(file); // Upload image
+
+      if (imageUrl.isNotEmpty) {
+        setState(() {
+          final updatedUser = User(
+            id: widget.user.id,
+            email: widget.user.email,
+            username: widget.user.username,
+            contact: widget.user.contact,
+            profileImage: imageUrl.isNotEmpty ? imageUrl : widget.user.profileImage, // ✅ Only update if valid
+            membershipType: widget.user.membershipType,
+          );
+
+          Provider.of<user_provider.UserProvider>(context, listen: false).setUser(updatedUser);
+        });
+
+        print("Image uploaded: $imageUrl");
+      }
+
+    }
   }
 
   @override
@@ -57,9 +105,11 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundImage: widget.user.profileImage != null
-                        ? NetworkImage(widget.user.profileImage!)
-                        : AssetImage('assets/images/default_profile.png') as ImageProvider,
+                    backgroundImage: widget.user.profileImage != null && widget.user.profileImage!.isNotEmpty
+                        ? (widget.user.profileImage!.startsWith('http') // Check if it's a URL
+                        ? NetworkImage(widget.user.profileImage!) // ✅ Use NetworkImage for URLs
+                        : FileImage(File(widget.user.profileImage!)) as ImageProvider) // ✅ Use FileImage for local paths
+                        : AssetImage('assets/images/profile_photo.jpg') as ImageProvider,
                   ),
                   IconButton(
                     onPressed: _updateProfileImage,

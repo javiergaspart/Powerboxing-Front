@@ -1,5 +1,5 @@
 class AppUrls {
-  static const String baseUrl = "http://10.0.2.2:5000/fitboxing";
+  static const String baseUrl = "http://10.0.2.2:5173/fitboxing";
   
   // Authentication endpoints
   static const String login = "$baseUrl/auth/login";
@@ -13,6 +13,8 @@ class AppUrls {
   static const String getResults = "$baseUrl/results";
   
   // User endpoints
-  static const String getUserProfile = "$baseUrl/user/profile";
-  static const String updateUserProfile = "$baseUrl/user/update";
+  static const String getUserProfile = "$baseUrl/users/profile";
+  static const String updateUserProfile = "$baseUrl/users/update";
+  static const String uploadProfileImage = "$baseUrl/users/upload-profile-image"; // New API for image upload
+
 }

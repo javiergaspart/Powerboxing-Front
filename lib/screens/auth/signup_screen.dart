@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
-import '../dashboard/home_screen.dart'; // Assuming this is the home screen after signup
+import '../../providers/user_provider.dart' as user_provider;
+import '../dashboard/home_screen.dart';
+import 'package:provider/provider.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -15,31 +17,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  // Function to handle signup
   Future<void> _signUp() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      print({
-        'username': _usernameController.text,
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      });
       User user = await _authService.signUp(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
       );
 
-      // Navigate to home screen after successful signup
+      Provider.of<user_provider.UserProvider>(context, listen: false).setUser(user);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen(user: user)), // Pass the 'user' object
+        MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
       );
     } catch (e) {
-      // Show an error message if signup fails
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signup failed: ${e.toString()}')),
       );
@@ -53,44 +49,101 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sign Up')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
+      backgroundColor: Color(0xFF0A3D2D),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Create Account',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'BebasNeue',
+                  color: Color(0xFFF5F5DC),
+                  letterSpacing: 1.5,
+                ),
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _signUp,
-                    child: Text('Sign Up'),
+              SizedBox(height: 30),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: TextField(
+                  controller: _emailController,
+                  style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
+                  decoration: InputDecoration(
+                    hintText: 'Email',
+                    hintStyle: TextStyle(color: Colors.black54),
+                    filled: true,
+                    fillColor: Color(0xFFF5F5DC),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-          ],
+                ),
+              ),
+              SizedBox(height: 15),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: TextField(
+                  controller: _usernameController,
+                  style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
+                  decoration: InputDecoration(
+                    hintText: 'Username',
+                    hintStyle: TextStyle(color: Colors.black54),
+                    filled: true,
+                    fillColor: Color(0xFFF5F5DC),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 15),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    hintStyle: TextStyle(color: Colors.black54),
+                    filled: true,
+                    fillColor: Color(0xFFF5F5DC),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : OutlinedButton(
+                onPressed: _signUp,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Color(0xFFF5F5DC)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+                ),
+                child: Text(
+                  'Sign Up',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'BebasNeue',
+                    color: Color(0xFFF5F5DC),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

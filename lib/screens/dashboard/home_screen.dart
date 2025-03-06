@@ -1,17 +1,13 @@
-import 'package:fitboxing_app/screens/navbar/about_us_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/session_service.dart';
 import '../../models/session_model.dart';
-import '../../screens/session_result_screen.dart';
-import './reservation_screen.dart';
-import 'package:intl/intl.dart';
 import '../../models/user_model.dart';
-import '../navbar/membership_screen.dart';
-import '../navbar/my_profile_screen.dart';
-import '../navbar/membership_screen.dart';
-import '../navbar/contact_us_screen.dart';
+import 'package:intl/intl.dart';
+import '../../styles/styles.dart';
+import './reservation_screen.dart';
 import '../navbar/settings_screen.dart';
-import '../../styles/styles.dart'; // Import the styles file
+import '../navbar/my_profile_screen.dart';
+import '../navbar/contact_us_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -22,247 +18,304 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Future<List<Session>> _upcomingSessions;
   late Future<List<Session>> _previousSessions;
+  late TabController _tabController;
+  late AnimationController _animationController;
+  late Animation<Offset> _sidebarAnimation;
+  bool _isSidebarOpen = false;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _upcomingSessions = SessionService().getUpcomingSessions(widget.user.id);
     _previousSessions = SessionService().getPreviousSessions(widget.user.id);
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+
+    _sidebarAnimation = Tween<Offset>(
+      begin: Offset(-1.0, 0.0),
+      end: Offset(0.0, 0.0),
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
   }
 
-  void _handleMenuItemSelected(String value) {
-    switch (value) {
-      case 'profile':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MyProfileScreen(user: widget.user,)),
-        );
-        break;
-      case 'about':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AboutUsScreen()),
-        );
-        break;
-      case 'membership':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MembershipScreen()),
-        );
-        break;
-      case 'contact':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ContactUsScreen()),
-        );
-        break;
-      case 'settings':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SettingsScreen()),
-        );
-        break;
-      case 'logout':
-      // Handle logout logic (e.g., clearing user data, navigating to login screen)
-        Navigator.popUntil(context, ModalRoute.withName('/'));
-        print("Logged out");
-        break;
-    }
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _animationController.dispose();
+    super.dispose();
   }
 
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarOpen = !_isSidebarOpen;
+      if (_isSidebarOpen) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+  }
+
+  void _navigateToPage(String page) {
+    print("Navigating to: $page");
+    // Add your navigation logic here.
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF0A3D2D),
       appBar: AppBar(
-        title: Text('Dashboard'),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: AppGradients.backgroundGradient, // Use gradient from styles file
-        ),
-        child: ListView(
+        backgroundColor: Color(0xFFF5F5DC),
+        title: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Profile Photo with dark grey border
-                      Container(
-                        width: 100, // Fixed width
-                        height: 100, // Fixed height
-                        decoration: AppImageStyles.profileImageDecoration(
-                          hasProfileImage: widget.user.profileImage != null && widget.user.profileImage!.isNotEmpty,
-                          profileImageUrl: widget.user.profileImage ?? '',
-                        ),
-                      ),
-                      SizedBox(width: 8), // Add space between profile photo and text
-                      // Welcome Text
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.user.username,
-                            style: AppTextStyles.welcomeText.copyWith(fontWeight: FontWeight.bold), // Bold username
-                          ),
-                          SizedBox(height: 8),
-                        ],
-                      ),
-                    ],
-                  ),
-                  // Shortcut Navbar (3 horizontal lines icon)
-                  PopupMenuButton<String>(
-                    onSelected: _handleMenuItemSelected,
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'profile',
-                        child: Text('My Profile'),
-                      ),
-                      PopupMenuItem(
-                        value: 'about',
-                        child: Text('About Us'),
-                      ),
-                      PopupMenuItem(
-                        value: 'membership',
-                        child: Text('Membership'),
-                      ),
-                      PopupMenuItem(
-                        value: 'contact',
-                        child: Text('Contact Us'),
-                      ),
-                      PopupMenuItem(
-                        value: 'settings',
-                        child: Text('Settings'),
-                      ),
-                      PopupMenuItem(
-                        value: 'logout',
-                        child: Text('Log Out'),
-                      ),
-                    ],
-                    icon: Icon(Icons.menu), // Three horizontal lines icon
-                  ),
-                ],
-              ),
+            Image.asset('assets/images/logo.png', height: 40),
+            SizedBox(width: 10),
+            Text(
+              'Powerboxing',
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ReservationScreen(),
-                    ),
-                  );
-                },
-                child: Text('Reserve Session'),
-              ),
-            ),
-            FutureBuilder<List<Session>>(
-              future: _upcomingSessions,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (snapshot.hasData) {
-                  final sessions = snapshot.data!;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          'Upcoming Sessions',
-                          style: AppTextStyles.sectionTitle,
-                        ),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: sessions.length,
-                        itemBuilder: (context, index) {
-                          final session = sessions[index];
-                          return ListTile(
-                            title: Text(session.location),
-                            subtitle: Text(DateFormat('yyyy-MM-dd').format(session.date)),
-                            trailing: Text(session.status),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SessionResultScreen(sessionId: session.id),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                }  else {
-                  return Center(child: Text('No upcoming sessions found.'));
-                }
-              },
-            ),
-            FutureBuilder<List<Session>>(
-              future: _previousSessions,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (snapshot.hasData) {
-                  final sessions = snapshot.data!;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          'Previous Sessions',
-                          style: AppTextStyles.sectionTitle,
-                        ),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: sessions.length,
-                        itemBuilder: (context, index) {
-                          final session = sessions[index];
-                          return ListTile(
-                            title: Text(session.location),
-                            subtitle: Text(DateFormat('yyyy-MM-dd').format(session.date)),
-                            trailing: Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SessionResultScreen(sessionId: session.id),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                } else {
-                  return Center(child: Text('No previous sessions found.'));
-                }
-              },
+            Spacer(),
+            IconButton(
+              icon: Icon(Icons.menu, color: Colors.black),
+              onPressed: _toggleSidebar,
             ),
           ],
         ),
       ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // User Profile Row
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        // Handle profile photo change
+                      },
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey, width: 1),
+                          shape: BoxShape.rectangle,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: Image.asset('assets/images/profile_photo.jpg', fit: BoxFit.cover),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(bottom: BorderSide(color: Colors.grey, width: 1.5)),
+                        ),
+                        child: Text(
+                          widget.user.username.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              // TabBar Header
+              TabBar(
+                controller: _tabController,
+                tabs: [
+                  Tab(text: 'Summary'),
+                  Tab(text: 'Previous Sessions'),
+                ],
+                labelColor: Colors.white,
+                indicatorColor: Colors.white,
+              ),
+              // TabBarView with cards at the top in Summary tab
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    FutureBuilder<List<Session>>(
+                      future: _upcomingSessions,
+                      builder: (context, snapshot) {
+                        String nextSession = 'None';
+                        String sessionDate = '';
+                        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                          nextSession = snapshot.data![0].location;
+                          sessionDate = DateFormat('yyyy-MM-dd').format(snapshot.data![0].date);
+                        }
+                        return SingleChildScrollView(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 16, left: 16, right: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildCard('Next Session: $nextSession', sessionDate, 'Reserve Session'),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Expanded(
+                                      child: _buildCard('Available Sessions: 0', '', 'Become a Member'),
+                                    ),
+                                  ],
+                                ),
+                                // Future rows can be added here later
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    Center(child: Text('Previous Sessions Placeholder', style: TextStyle(color: Colors.white))),
+                  ],
+                ),
+              ),
+              // Footer
+              SingleChildScrollView(
+                child: Container(
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('© 2025 Powerboxing. All rights reserved.', style: TextStyle(color: Colors.black54)),
+                      SizedBox(height: 5),
+                      Text('www.powerboxing.fun', style: TextStyle(color: Colors.black54)),
+                      SizedBox(height: 5),
+                      Text('Javier Gaspert', style: TextStyle(color: Colors.black54)),
+                      SizedBox(height: 5),
+                      Text('info@powerboxing.com', style: TextStyle(color: Colors.black54)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Sidebar
+          SlideTransition(
+            position: _sidebarAnimation,
+            child: Container(
+              width: 250,
+              color: Color(0xFFF5F5DC),
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 175,
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
+                    ),
+                    child: TextButton(
+                      onPressed: () => _navigateToPage('Profile'),
+                      child: Text(
+                        'Profile',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 175,
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
+                    ),
+                    child: TextButton(
+                      onPressed: () => _navigateToPage('Payments'),
+                      child: Text(
+                        'Payments',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 175,
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
+                    ),
+                    child: TextButton(
+                      onPressed: () => _navigateToPage('Contact Us'),
+                      child: Text(
+                        'Help',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 175,
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
+                    ),
+                    child: TextButton(
+                      onPressed: () => _navigateToPage('Settings'),
+                      child: Text(
+                        'Settings',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard(String title, String subtitle, String buttonText) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double width = constraints.maxWidth;
+        double height = width * 1.25; // Maintain aspect ratio of 1.25
+
+        return Container(
+          width: width,
+          height: height,
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Color(0xFFF5F5DC),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(title, style: TextStyle(color: Colors.black)),
+              if (subtitle.isNotEmpty) Text(subtitle, style: TextStyle(color: Colors.black)),
+              SizedBox(height: 3),
+              OutlinedButton(
+                onPressed: () {},
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Color(0xFF0A3D2D)),
+                ),
+                child: Text(buttonText, style: TextStyle(color: Color(0xFF0A3D2D))),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

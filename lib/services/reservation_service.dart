@@ -17,7 +17,7 @@ class ReservationService {
     print(date);
     print(location);
     print(instructor);
-    final url = Uri.parse('${AppUrls.baseUrl}/sessions/reserve-or-create');
+    final url = Uri.parse('${AppUrls.baseUrl}/sessions/book');
     final response = await http.post(
       url,
       body: json.encode({
