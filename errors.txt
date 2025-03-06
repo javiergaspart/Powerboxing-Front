@@ -1,0 +1,38 @@
+Analyzing Frontend_Fitboxing...                                 
+
+warning - The include file 'package:flutter_lints/flutter.yaml' in 'C:\Users\javie\Frontend_Fitboxing\analysis_options.yaml' can't be found when analyzing 'C:\Users\javie\Frontend_Fitboxing' - analysis_options.yaml:10:10 - include_file_not_found
+warning - Unused import: 'package:fitboxing_app/screens/dashboard/reservation_successful_screen.dart' - lib\main.dart:1:8 - unused_import
+  error - Undefined class 'User' - lib\providers\auth_provider.dart:6:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\auth_provider.dart:9:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\user_provider.dart:5:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\user_provider.dart:8:3 - undefined_class
+  error - Undefined class 'User' - lib\providers\user_provider.dart:11:16 - undefined_class
+  error - Undefined class 'User' - lib\routes.dart:31:15 - undefined_class
+  error - The name 'User' isn't a type, so it can't be used in an 'as' expression - lib\routes.dart:31:49 - cast_to_non_type
+  error - Undefined class 'User' - lib\routes.dart:36:15 - undefined_class
+  error - The name 'User' isn't a type, so it can't be used in an 'as' expression - lib\routes.dart:36:49 - cast_to_non_type
+  error - Undefined class 'User' - lib\screens\auth\login_screen.dart:33:7 - undefined_class
+  error - Undefined class 'User' - lib\screens\auth\signup_screen.dart:33:7 - undefined_class
+warning - The value of the field '_selectedSession' isn't used - lib\screens\dashboard\reservation_screen.dart:19:12 - unused_field
+  error - Undefined class 'User' - lib\screens\dashboard\reservation_successful_screen.dart:8:9 - undefined_class
+  error - Undefined class 'User' - lib\screens\dashboard_screen.dart:13:5 - undefined_class
+  error - Undefined class 'User' - lib\screens\navbar\my_profile_screen.dart:8:9 - undefined_class
+  error - The name 'User' isn't a type, so it can't be used as a type argument - lib\services\auth_service.dart:8:10 - non_type_as_type_argument
+  error - Undefined class 'User' - lib\services\auth_service.dart:26:7 - undefined_class
+  error - Undefined name 'User' - lib\services\auth_service.dart:26:19 - undefined_identifier
+  error - The name 'User' isn't a type, so it can't be used as a type argument - lib\services\auth_service.dart:36:10 - non_type_as_type_argument
+  error - Undefined class 'User' - lib\services\auth_service.dart:56:7 - undefined_class
+  error - Undefined name 'User' - lib\services\auth_service.dart:56:19 - undefined_identifier
+  error - The name 'User' isn't a type, so it can't be used as a type argument - lib\services\auth_service.dart:89:10 - non_type_as_type_argument
+  error - Undefined name 'User' - lib\services\auth_service.dart:104:14 - undefined_identifier
+  error - The name 'User' isn't a type, so it can't be used as a type argument - lib\services\user_service.dart:13:10 - non_type_as_type_argument
+  error - Undefined name 'User' - lib\services\user_service.dart:24:16 - undefined_identifier
+  error - The name 'User' isn't a type, so it can't be used as a type argument - lib\services\user_service.dart:35:10 - non_type_as_type_argument
+  error - Undefined name 'User' - lib\services\user_service.dart:58:16 - undefined_identifier
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\theme\dark_theme.dart:20:89 - deprecated_member_use
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\theme\light_theme.dart:16:5 - deprecated_member_use
+   info - 'onBackground' is deprecated and shouldn't be used. Use onSurface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\theme\light_theme.dart:17:5 - deprecated_member_use
+   info - 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\widgets\custom_button.dart:22:26 - deprecated_member_use
+   info - 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\widgets\custom_button.dart:23:18 - deprecated_member_use
+   info - 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\widgets\session_card.dart:60:40 - deprecated_member_use
+

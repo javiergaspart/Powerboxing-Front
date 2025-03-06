@@ -1,5 +1,9 @@
 class AppUrls {
+<<<<<<< HEAD
   static const String baseUrl = "http://10.0.2.2:5173/fitboxing";
+=======
+  static const String baseUrl = "http://localhost:8080/fitboxing";
+>>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
   
   // Authentication endpoints
   static const String login = "$baseUrl/auth/login";

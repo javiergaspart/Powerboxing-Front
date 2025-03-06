@@ -15,6 +15,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();  // Added phone number controller
   bool _isLoading = false;
 
   Future<void> _signUp() async {
@@ -23,10 +24,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
+<<<<<<< HEAD
+=======
+      print({
+        'username': _usernameController.text,
+        'email': _emailController.text,
+        'password': _passwordController.text,
+        'phone': _phoneController.text,  // Include phone number
+      });
+
+>>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
       User user = await _authService.signUp(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
+        _phoneController.text,  // Pass phone number
       );
 
       Provider.of<user_provider.UserProvider>(context, listen: false).setUser(user);
@@ -120,6 +132,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
               ),
+<<<<<<< HEAD
               SizedBox(height: 20),
               _isLoading
                   ? Center(child: CircularProgressIndicator())
@@ -144,6 +157,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ],
           ),
+=======
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',  // Added phone number input
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+            _isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+              onPressed: _signUp,
+              child: Text('Sign Up'),
+            ),
+          ],
+>>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
         ),
       ),
     );

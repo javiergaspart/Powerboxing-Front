@@ -1,6 +1,6 @@
 class ApiConfig {
   // Base URL for your backend API
-  static const String baseUrl = 'http://10.0.2.2:5000/fitboxing';
+  static const String baseUrl = 'http://10.0.2.2:8080/fitboxing';
 
   // Authentication Endpoints
   static const String loginEndpoint = '$baseUrl/auth/login';

@@ -30,7 +30,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.user.username);
     _emailController = TextEditingController(text: widget.user.email);
-    _contactController = TextEditingController(text: widget.user.contact);
+    _contactController = TextEditingController(text: widget.user.phone);
   }
   Future<String> uploadImage(File imageFile) async {
     var request = http.MultipartRequest(

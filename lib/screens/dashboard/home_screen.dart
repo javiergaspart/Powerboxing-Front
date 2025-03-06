@@ -10,7 +10,7 @@ import '../navbar/my_profile_screen.dart';
 import '../navbar/contact_us_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final User user;
+  final UserModel user;
 
   const HomeScreen({Key? key, required this.user}) : super(key: key);
 
@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
   }
 
+<<<<<<< HEAD
   @override
   void dispose() {
     _tabController.dispose();
@@ -67,6 +68,47 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Add your navigation logic here.
   }
 
+=======
+  void _handleMenuItemSelected(String value) {
+    switch (value) {
+      case 'profile':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MyProfileScreen(user: widget.user)),
+        );
+        break;
+      case 'about':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AboutUsScreen()),
+        );
+        break;
+      case 'membership':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MembershipScreen()),
+        );
+        break;
+      case 'contact':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ContactUsScreen()),
+        );
+        break;
+      case 'settings':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SettingsScreen()),
+        );
+        break;
+      case 'logout':
+        Navigator.popUntil(context, ModalRoute.withName('/'));
+        print("Logged out");
+        break;
+    }
+  }
+
+>>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         backgroundColor: Color(0xFFF5F5DC),
         title: Row(
           children: [
+<<<<<<< HEAD
             Image.asset('assets/images/logo.png', height: 40),
             SizedBox(width: 10),
             Text(
@@ -142,10 +185,62 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 tabs: [
                   Tab(text: 'Summary'),
                   Tab(text: 'Previous Sessions'),
+=======
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Profile Photo with dark grey border
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: AppImageStyles.profileImageDecoration(
+                          hasProfileImage: widget.user.profileImage != null && widget.user.profileImage!.isNotEmpty,
+                          profileImageUrl: widget.user.profileImage ?? '',
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      // Welcome Text with Session Balance
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.user.username,
+                            style: AppTextStyles.welcomeText.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Available Sessions: ${widget.user.sessionBalance}',
+                            style: AppTextStyles.sectionTitle.copyWith(color: Colors.green),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  // Shortcut Navbar (3 horizontal lines icon)
+                  PopupMenuButton<String>(
+                    onSelected: _handleMenuItemSelected,
+                    itemBuilder: (context) => [
+                      PopupMenuItem(value: 'profile', child: Text('My Profile')),
+                      PopupMenuItem(value: 'about', child: Text('About Us')),
+                      PopupMenuItem(value: 'membership', child: Text('Membership')),
+                      PopupMenuItem(value: 'contact', child: Text('Contact Us')),
+                      PopupMenuItem(value: 'settings', child: Text('Settings')),
+                      PopupMenuItem(value: 'logout', child: Text('Log Out')),
+                    ],
+                    icon: Icon(Icons.menu),
+                  ),
+>>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
                 ],
                 labelColor: Colors.white,
                 indicatorColor: Colors.white,
               ),
+<<<<<<< HEAD
               // TabBarView with cards at the top in Summary tab
               Expanded(
                 child: TabBarView(
@@ -187,6 +282,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Center(child: Text('Previous Sessions Placeholder', style: TextStyle(color: Colors.white))),
                   ],
                 ),
+=======
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  if (widget.user.sessionBalance > 0) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReservationScreen(),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('No available sessions. Please purchase more.')),
+                    );
+                  }
+                },
+                child: Text('Reserve Session'),
+>>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
               ),
               // Footer
               SingleChildScrollView(
@@ -246,6 +362,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         'Payments',
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
                       ),
+<<<<<<< HEAD
                     ),
                   ),
                   Container(
@@ -259,6 +376,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Text(
                         'Help',
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
+=======
+                    ],
+                  );
+                } else {
+                  return Center(child: Text('No upcoming sessions found.'));
+                }
+              },
+            ),
+            FutureBuilder<List<Session>>(
+              future: _previousSessions,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (snapshot.hasData) {
+                  final sessions = snapshot.data!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'Previous Sessions',
+                          style: AppTextStyles.sectionTitle,
+                        ),
+>>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
                       ),
                     ),
                   ),

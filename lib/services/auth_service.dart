@@ -32,9 +32,9 @@ class AuthService {
     }
   }
 
-  // Sign up user
-  Future<User> signUp(String username, String email, String password) async {
-    print('SignUp called with email: $email, username: $username');
+  // Sign up user with added phone number
+  Future<User> signUp(String username, String email, String password, String phone) async {
+    print('SignUp called with email: $email, username: $username, phone: $phone');
     final url = Uri.parse('${AppUrls.baseUrl}/auth/register');
     print('Making POST request to $url');
     final response = await http.post(
@@ -46,6 +46,7 @@ class AuthService {
         'username': username,
         'email': email,
         'password': password,
+        'phone': phone,  // Added phone number here
       }),
     );
 
@@ -110,21 +111,12 @@ class AuthService {
   // Logout user
   Future<void> logout() async {
     print('Logout called');
-    // If you are storing the user's session or token (e.g., in SharedPreferences or SecureStorage),
-    // you can clear that data here. For example:
-
-    // Example of clearing stored data (using shared preferences):
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.remove('user_token');
-
-    // If there is a need to make a request to the backend to invalidate the session:
     final url = Uri.parse('${AppUrls.baseUrl}/auth/logout');
     print('Making POST request to $url');
     final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
-        // Include any authorization headers (e.g., token) if needed
       },
     );
 
@@ -134,7 +126,5 @@ class AuthService {
       throw Exception('Failed to logout');
     }
     print('Logout successful');
-    // Optionally clear any local user data here
-    // await prefs.clear(); // Clear all saved data if needed
   }
 }
