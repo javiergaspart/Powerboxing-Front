@@ -38,10 +38,8 @@ class _TrainerDashboardState extends State<TrainerDashboard> {
     }
   }
 
-   Future<void> _fetchAvailability() async {
-    print("🛠 Trainer ID Received in Dashboard: ${widget.trainerId}");
-
-    if (widget.trainerId.isEmpty || widget.trainerId == "MISSING_ID") {
+  Future<void> _fetchAvailability() async {
+    if (widget.trainerId.isEmpty) {
       print("❌ Trainer ID is empty! Check navigation parameters.");
       return;
     }
@@ -64,21 +62,9 @@ class _TrainerDashboardState extends State<TrainerDashboard> {
           sessions = data;
           selectedSessions.clear();
           for (var session in sessions) {
-    String formattedDate = session['date'].trim();
-    String formattedTime = session['time'].trim();
-
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(formattedDate)) {
-        print("❌ Skipping invalid date format: $formattedDate");
-        continue;
-    }
-    if (!RegExp(r'^\d{2}:\d{2}$').hasMatch(formattedTime)) {
-        print("❌ Skipping invalid time format: $formattedTime");
-        continue;
-    }
-
-    String key = "$formattedDate-$formattedTime";
-    selectedSessions.add(key);
-}
+            String key = "${session['date']}-${session['time']}";
+            selectedSessions.add(key);
+          }
         });
         print("✅ Successfully fetched and updated trainer availability.");
       } else {
@@ -89,76 +75,43 @@ class _TrainerDashboardState extends State<TrainerDashboard> {
     }
   }
 
- Future<void> _saveAvailability() async {
-  if (widget.trainerId.isEmpty) {
-    print("❌ Trainer ID is empty! Cannot save sessions.");
-    return;
+  Future<void> _saveAvailability() async {
+    if (widget.trainerId.isEmpty) {
+      print("❌ Trainer ID is empty! Cannot save sessions.");
+      return;
+    }
+
+    final url = "http://localhost:10000/api/trainer/${widget.trainerId}/sessions/save";
+    print("💾 Saving sessions to: $url");
+
+    List<Map<String, String>> sessionData = selectedSessions.map((key) {
+      List<String> parts = key.split('-');
+      return {"date": parts[0], "time": parts[1]};
+    }).toList();
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Authorization": "Bearer ${widget.token}",
+          "Content-Type": "application/json"
+        },
+        body: jsonEncode({"sessions": sessionData}),
+      );
+
+      print("💾 Response Status: ${response.statusCode}");
+      print("💾 Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        print("✅ Sessions saved successfully!");
+        _fetchAvailability(); // Refresh sessions after saving
+      } else {
+        print("❌ Error saving sessions: ${response.statusCode}");
+      }
+    } catch (error) {
+      print("❌ Exception saving sessions: $error");
+    }
   }
-
-  final url = "http://localhost:10000/api/trainer/sessions/save";
-  print("💾 Saving sessions to: $url");
-
-  List<Map<String, dynamic>> sessionData = selectedSessions.map<Map<String, dynamic>>((String key) {
-    List<String> parts = key.split(RegExp(r'-(?=\d{2}:\d{2}$)')); // Ensure correct split
-
-    if (parts.length != 2) {
-      print("❌ Error: Invalid session key format: $key");
-      return {};
-    }
-
-    String datePart = parts[0].trim();
-    String timePart = parts[1].trim();
-
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(datePart)) {
-      print("❌ Invalid date format detected: $datePart");
-      return {};
-    }
-
-    if (!RegExp(r'^\d{2}:\d{2}$').hasMatch(timePart)) {
-      print("❌ Invalid time format detected: $timePart");
-      return {};
-    }
-
-    return {
-      "trainer_id": widget.trainerId,
-      "date": datePart,
-      "time": timePart,
-      "available_slots": 20
-    };
-  }).where((session) => session.isNotEmpty).toList();
-
-print("🛠 Selected Sessions Before Formatting: $selectedSessions");
-print("🛠 Processed Sessions Before Sending: $sessionData");
-
-if (sessionData.isEmpty) {
-    print("❌ No valid sessions to save. Check the selected session formats.");
-    return;
-}
-
-  try {
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {
-        "Authorization": "Bearer ${widget.token}",
-        "Content-Type": "application/json"
-      },
-      body: jsonEncode(sessionData),
-    );
-
-    print("💾 Response Status: ${response.statusCode}");
-    print("💾 Response Body: ${response.body}");
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print("✅ Sessions saved successfully!");
-      _fetchAvailability();
-    } else {
-      print("❌ Error saving sessions: ${response.statusCode}");
-    }
-  } catch (error) {
-    print("❌ Exception saving sessions: $error");
-  }
-}
-
 
   @override
   Widget build(BuildContext context) {

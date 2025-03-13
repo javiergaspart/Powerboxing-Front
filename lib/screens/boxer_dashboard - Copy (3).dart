@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'session_buy_screen.dart'; // Import Buy Sessions Screen
 
 class BoxerDashboard extends StatefulWidget {
   final String token;
@@ -164,17 +163,7 @@ class _BoxerDashboardState extends State<BoxerDashboard> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SessionBuyScreen(
-                          token: widget.token,
-                          userId: userId,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: () {},
                   child: Text("Buy Sessions"),
                 ),
                 SizedBox(height: 20),

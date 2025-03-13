@@ -64,21 +64,9 @@ class _TrainerDashboardState extends State<TrainerDashboard> {
           sessions = data;
           selectedSessions.clear();
           for (var session in sessions) {
-    String formattedDate = session['date'].trim();
-    String formattedTime = session['time'].trim();
-
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(formattedDate)) {
-        print("❌ Skipping invalid date format: $formattedDate");
-        continue;
-    }
-    if (!RegExp(r'^\d{2}:\d{2}$').hasMatch(formattedTime)) {
-        print("❌ Skipping invalid time format: $formattedTime");
-        continue;
-    }
-
-    String key = "$formattedDate-$formattedTime";
-    selectedSessions.add(key);
-}
+            String key = "${session['date']}-${session['time']}";
+            selectedSessions.add(key);
+          }
         });
         print("✅ Successfully fetched and updated trainer availability.");
       } else {
@@ -99,7 +87,7 @@ class _TrainerDashboardState extends State<TrainerDashboard> {
   print("💾 Saving sessions to: $url");
 
   List<Map<String, dynamic>> sessionData = selectedSessions.map<Map<String, dynamic>>((String key) {
-    List<String> parts = key.split(RegExp(r'-(?=\d{2}:\d{2}$)')); // Ensure correct split
+    List<String> parts = key.split('-');
 
     if (parts.length != 2) {
       print("❌ Error: Invalid session key format: $key");
@@ -123,17 +111,14 @@ class _TrainerDashboardState extends State<TrainerDashboard> {
       "trainer_id": widget.trainerId,
       "date": datePart,
       "time": timePart,
-      "available_slots": 20
+      "available_slots": 20  // Default available slots
     };
   }).where((session) => session.isNotEmpty).toList();
 
-print("🛠 Selected Sessions Before Formatting: $selectedSessions");
-print("🛠 Processed Sessions Before Sending: $sessionData");
-
-if (sessionData.isEmpty) {
-    print("❌ No valid sessions to save. Check the selected session formats.");
+  if (sessionData.isEmpty) {
+    print("❌ No valid sessions to save!");
     return;
-}
+  }
 
   try {
     final response = await http.post(
