@@ -1,162 +1,97 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:fitboxing_app/providers/user_provider.dart';
+import 'package:fitboxing_app/screens/auth/login_screen.dart';
 
-class SettingsScreen extends StatefulWidget {
-  @override
-  _SettingsScreenState createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-
-  // Dummy data for profile (replace with actual user data)
-  String _name = "Shruti Verma";
-  String _email = "vermaashruti28@example.com";
-  String _location = "Hyderabad";
-  String _password = "********"; // Don't show the actual password for security reasons
-  File? _profileImage;
-
-  // Function to pick a new profile picture
-  Future<void> _pickProfileImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  // Log out function
-  Future<void> _logOut() async {
-    await _secureStorage.delete(key: 'auth_token'); // Delete the token from secure storage
-    Navigator.pushReplacementNamed(context, '/login'); // Redirect to login screen
-  }
-
-  // Function to save profile updates (you'll need to integrate it with your backend or local storage)
-  Future<void> _saveProfile() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
-
-      // You can make an API call here to save the updated user data
-      print("Profile Updated: $_name, $_email, $_location, $_password");
-
-      // Show a success message
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile updated successfully!')));
-    }
-  }
-
-  // Function to change password (implement your password change logic here)
-  Future<void> _changePassword() async {
-    // Show a dialog or navigate to a password change screen
-    print("Change Password button clicked");
-    // Implement password change logic here
-  }
-
+class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF151718),
       appBar: AppBar(
-        title: Text('Settings'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logOut,
-          )
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile Picture
-                Center(
-                  child: GestureDetector(
-                    onTap: _pickProfileImage,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _profileImage != null
-                          ? FileImage(_profileImage!)
-                          : NetworkImage('https://via.placeholder.com/150') as ImageProvider,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-
-                // Name TextField
-                TextFormField(
-                  initialValue: _name,
-                  decoration: InputDecoration(labelText: 'Name'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
-                    }
-                    return null;
-                  },
-                  onSaved: (newValue) => _name = newValue!,
-                ),
-                SizedBox(height: 20),
-
-                // Email TextField
-                TextFormField(
-                  initialValue: _email,
-                  decoration: InputDecoration(labelText: 'Email'),
-                  enabled: false, // Email should not be editable
-                ),
-                SizedBox(height: 20),
-
-                // Location Dropdown
-                DropdownButtonFormField<String>(
-                  value: _location,
-                  decoration: InputDecoration(labelText: 'Location'),
-                  items: ['Hyderabad', 'Bengaluru'].map((location) {
-                    return DropdownMenuItem<String>(
-                      value: location,
-                      child: Text(location),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _location = newValue!;
-                    });
-                  },
-                ),
-                SizedBox(height: 20),
-
-                // Password TextField
-                TextFormField(
-                  initialValue: _password,
-                  decoration: InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                  onSaved: (newValue) => _password = newValue!,
-                ),
-                SizedBox(height: 20),
-
-                // Save Profile Button
-                ElevatedButton(
-                  onPressed: _saveProfile,
-                  child: Text('Save Profile'),
-                ),
-                SizedBox(height: 20),
-
-                // Change Password Button
-                ElevatedButton(
-                  onPressed: _changePassword,
-                  child: Text('Change Password'),
-                ),
-              ],
-            ),
-          ),
+        backgroundColor: Colors.black,
+        title: Text("Settings", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
+      body: Padding(
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        child: Column(
+          children: [
+            _buildSettingsItem(context, "Personal Information", Icons.person, () {
+              // Navigate to Personal Information Screen
+            }),
+            _buildSettingsItem(context, "Password", Icons.lock, () {
+              // Navigate to Password Change Screen
+            }),
+            _buildSettingsItem(context, "Language", Icons.language, () {
+              // Navigate to Language Selection Screen
+            }),
+            _buildSettingsItem(context, "Payment", Icons.payment, () {
+              // Navigate to Payment Screen
+            }),
+            _buildSettingsItem(context, "Contact Us", Icons.mail, () {
+              // Navigate to Contact Support Screen
+            }),
+            _buildSettingsItem(context, "Log out", Icons.exit_to_app, () {
+              _confirmLogout(context);
+            }), // Logout looks like other items
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsItem(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 5),
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900, // Same color as other items
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Text(title, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            Spacer(),
+            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          title: Text("Confirm Logout", style: TextStyle(color: Colors.white)),
+          content: Text("Are you sure you want to log out?", style: TextStyle(color: Colors.grey)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () {
+                Provider.of<UserProvider>(context, listen: false).logout();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false,
+                );
+              },
+              child: Text("Logout", style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

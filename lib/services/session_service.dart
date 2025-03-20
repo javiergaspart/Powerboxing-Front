@@ -16,6 +16,8 @@ class SessionService {
       );
 
       if (response.statusCode == 200) {
+        print("Raw API Response: ${response.body}");
+
         final Map<String, dynamic> result = json.decode(response.body);
 
         print('API Response: $result'); // Debugging: Log the response

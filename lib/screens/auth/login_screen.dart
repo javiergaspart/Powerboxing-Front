@@ -17,24 +17,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  late Timer _smileyTimer;
-  String _currentSmiley = '🙂';
-
-  @override
-  void initState() {
-    super.initState();
-    _smileyTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        _currentSmiley = _currentSmiley == '🙂' ? '🙃' : '🙂';
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _smileyTimer.cancel();
-    super.dispose();
-  }
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
@@ -43,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         _emailController.text,
         _passwordController.text,
       );
-      Provider.of<user_provider.UserProvider>(context, listen: false).setUser(user);
+      if (!mounted) return;
+      context.read<user_provider.UserProvider>().setUser(user);
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
@@ -51,142 +34,139 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           transitionsBuilder: (_, anim, __, child) {
             return FadeTransition(opacity: anim, child: child);
           },
-          transitionDuration: Duration(milliseconds: 100),
+          transitionDuration: const Duration(milliseconds: 100),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: ${e.toString()}')),
+        SnackBar(content: Text('Login failed: \${e.toString()}')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0A3D2D),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-            Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Welcome Back',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'BebasNeue',
-                  color: Color(0xFFF5F5DC),
-                  letterSpacing: 1.5,
-                ),
-              ),
-              SizedBox(width: 10),
-              Text(
-                _currentSmiley,
-                style: TextStyle(fontSize: 30),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.7,
-            child: TextField(
-              controller: _emailController,
-              style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
-              decoration: InputDecoration(
-                hintText: 'Email',
-                hintStyle: TextStyle(color: Colors.black54),
-                filled: true,
-                fillColor: Color(0xFFF5F5DC),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+      backgroundColor: Colors.black,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 100),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Image.asset(
+                'assets/images/login_banner.jpeg',
+                width: MediaQuery.of(context).size.width * 0.7,
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          SizedBox(height: 15),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.7,
-            child: TextField(
-              controller: _passwordController,
-              obscureText: true,
-              style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
-              decoration: InputDecoration(
-                hintText: 'Password',
-                hintStyle: TextStyle(color: Colors.black54),
-                filled: true,
-                fillColor: Color(0xFFF5F5DC),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[600],
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF8C8C8C),
+                          blurRadius: 4,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _emailController,
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Email',
+                        hintStyle: TextStyle(color: Colors.white54),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[800],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[600],
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF8C8C8C),
+                          blurRadius: 4,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Password',
+                        hintStyle: TextStyle(color: Colors.white54),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[800],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF99C448),
+                      padding: EdgeInsets.symmetric(vertical: 14, horizontal: 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Log In',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignUpScreen()),
+                    ),
+                    child: Text(
+                      "Don't have an account? Sign Up",
+                      style: TextStyle(color: Color(0xFF99C448), fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          SizedBox(height: 30),
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : OutlinedButton(
-            onPressed: _login,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Color(0xFFF5F5DC),
-              side: BorderSide(color: Color(0xFFF5F5DC), width: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
-            ),
-            child: Text(
-              'Login',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'BebasNeue',
-              ),
-            ),
-          ),
-          SizedBox(height: 10),
-          TextButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/forgot-password');
-            },
-            child: Text(
-              'Forgot Password?',
-              style: TextStyle(
-                color: Color(0xFFF5F5DC),
-                fontFamily: 'BebasNeue',
-                fontSize: 18,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SignUpScreen()),
-              );
-            },
-            child: Text(
-                "Don't have an account? Sign Up",
-            style: TextStyle(
-                color: Color(0xFFF5F5DC),
-            fontFamily: 'BebasNeue',
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          ],
         ),
       ),
-      ],
-    ),
-    ),
-    ),
     );
   }
 }

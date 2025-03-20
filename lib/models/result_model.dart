@@ -1,41 +1,28 @@
 class PunchResult {
+  final String id;
   final String sessionId;
   final String userId;
-  final int correctPunches;
-  final int totalPunches;
-  final double powerScore;
-  final double accuracyScore;
+  final String username;
+  final int accuracy;
+  final int power;
 
   PunchResult({
+    required this.id,
     required this.sessionId,
     required this.userId,
-    required this.correctPunches,
-    required this.totalPunches,
-    required this.powerScore,
-    required this.accuracyScore,
+    required this.username,
+    required this.accuracy,
+    required this.power,
   });
 
-  // Convert JSON to PunchResult object
   factory PunchResult.fromJson(Map<String, dynamic> json) {
     return PunchResult(
-      sessionId: json['sessionId'],
-      userId: json['userId'],
-      correctPunches: json['correctPunches'],
-      totalPunches: json['totalPunches'],
-      powerScore: json['powerScore'].toDouble(),
-      accuracyScore: json['accuracyScore'].toDouble(),
+      id: json['id'] ?? '',  // Ensure non-null String
+      sessionId: json['sessionId'] ?? '', // Ensure non-null String
+      userId: json['userId'] ?? '', // Ensure non-null String
+      username: json['username'] ?? '', // Ensure non-null String
+      accuracy: json['accuracy'] ?? 0, // Ensure non-null Int
+      power: json['power'] ?? 0, // Ensure non-null Int
     );
-  }
-
-  // Convert PunchResult object to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'sessionId': sessionId,
-      'userId': userId,
-      'correctPunches': correctPunches,
-      'totalPunches': totalPunches,
-      'powerScore': powerScore,
-      'accuracyScore': accuracyScore,
-    };
   }
 }

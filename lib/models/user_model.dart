@@ -1,18 +1,15 @@
-import 'package:flutter/material.dart';
-
-// User model representing the customer details
-class UserModel {
+class User {
   final String id;
   final String email;
   final String username;
   final String phone;
-  final String? profileImage; // Nullable
-  final String? membershipType; // Nullable
+  final String? profileImage;
+  final String? membershipType;
   final DateTime joinDate;
   final bool newcomer;
-  final int sessionBalance; // Added session balance
+  final int sessionBalance;
 
-  UserModel({
+  User({
     required this.id,
     required this.email,
     required this.username,
@@ -24,22 +21,46 @@ class UserModel {
     required this.sessionBalance,
   });
 
-  // Convert JSON to User object
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['_id'] ?? '',
-      email: json['email'] ?? '',
-      username: json['username'] ?? '',
-      phone: json['phone'] ?? '',
-      profileImage: json['profileImage'] ?? '',
-      membershipType: json['membershipType'] ?? 'basic',
-      joinDate: DateTime.parse(json['joinDate'] ?? DateTime.now().toIso8601String()),
-      newcomer: json['newcomer'] ?? false,
-      sessionBalance: json['sessionBalance'] ?? 1, // Default to 1 session for newcomers
+  User copyWith({
+    String? id,
+    String? email,
+    String? username,
+    String? phone,
+    String? profileImage,
+    String? membershipType,
+    DateTime? joinDate,
+    bool? newcomer,
+    int? sessionBalance,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      username: username ?? this.username,
+      phone: phone ?? this.phone,
+      profileImage: profileImage ?? this.profileImage,
+      membershipType: membershipType ?? this.membershipType,
+      joinDate: joinDate ?? this.joinDate,
+      newcomer: newcomer ?? this.newcomer,
+      sessionBalance: sessionBalance ?? this.sessionBalance,
     );
   }
 
-  // Convert User object to JSON
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      username: json['username'] ?? '',
+      phone: json['phone'] ?? '',
+      profileImage: json['profileImage'],
+      membershipType: json['membershipType'],
+      joinDate: json['joinDate'] != null
+          ? DateTime.parse(json['joinDate'])
+          : DateTime.now(),
+      newcomer: json['newcomer'] ?? false,
+      sessionBalance: json['sessionBalance'] ?? 1,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -53,34 +74,18 @@ class UserModel {
       'sessionBalance': sessionBalance,
     };
   }
-}
 
-// User provider to manage current user
-class UserProvider with ChangeNotifier {
-  UserModel? _user;
-
-  UserModel? get user => _user;
-
-  void setUser(UserModel user) {
-    _user = user;
-    notifyListeners();
-  }
-
-  // Function to update session balance after booking a session
-  void decrementSessionBalance() {
-    if (_user != null && _user!.sessionBalance > 0) {
-      _user = UserModel(
-        id: _user!.id,
-        email: _user!.email,
-        username: _user!.username,
-        phone: _user!.phone,
-        profileImage: _user!.profileImage,
-        membershipType: _user!.membershipType,
-        joinDate: _user!.joinDate,
-        newcomer: _user!.newcomer,
-        sessionBalance: _user!.sessionBalance - 1,
-      );
-      notifyListeners();
-    }
+  factory User.defaultUser() {
+    return User(
+      id: '0',
+      email: 'guest@a.com',
+      username: 'Guest',
+      phone: '9631201963',
+      profileImage: 'assets/images/logo.png',
+      membershipType: 'basic',
+      joinDate: DateTime.now(),
+      newcomer: true,
+      sessionBalance: 0,
+    );
   }
 }

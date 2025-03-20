@@ -3,6 +3,7 @@ import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
 import '../../providers/user_provider.dart' as user_provider;
 import '../dashboard/home_screen.dart';
+import 'login_screen.dart';
 import 'package:provider/provider.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -15,168 +16,131 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _phoneController = TextEditingController();  // Added phone number controller
   bool _isLoading = false;
 
   Future<void> _signUp() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-<<<<<<< HEAD
-=======
-      print({
-        'username': _usernameController.text,
-        'email': _emailController.text,
-        'password': _passwordController.text,
-        'phone': _phoneController.text,  // Include phone number
-      });
-
->>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
       User user = await _authService.signUp(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
-        _phoneController.text,  // Pass phone number
       );
-
-      Provider.of<user_provider.UserProvider>(context, listen: false).setUser(user);
-
+      if (!mounted) return;
+      context.read<user_provider.UserProvider>().setUser(user);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(user: user),
+          transitionsBuilder: (_, anim, __, child) {
+            return FadeTransition(opacity: anim, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 100),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Signup failed: ${e.toString()}')),
+        SnackBar(content: Text('Signup failed: \${e.toString()}')),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0A3D2D),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                'Create Account',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'BebasNeue',
-                  color: Color(0xFFF5F5DC),
-                  letterSpacing: 1.5,
-                ),
-              ),
-              SizedBox(height: 30),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: TextField(
-                  controller: _emailController,
-                  style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
-                  decoration: InputDecoration(
-                    hintText: 'Email',
-                    hintStyle: TextStyle(color: Colors.black54),
-                    filled: true,
-                    fillColor: Color(0xFFF5F5DC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 15),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: TextField(
-                  controller: _usernameController,
-                  style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
-                  decoration: InputDecoration(
-                    hintText: 'Username',
-                    hintStyle: TextStyle(color: Colors.black54),
-                    filled: true,
-                    fillColor: Color(0xFFF5F5DC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 15),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: TextStyle(fontFamily: 'BebasNeue', fontSize: 18),
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    hintStyle: TextStyle(color: Colors.black54),
-                    filled: true,
-                    fillColor: Color(0xFFF5F5DC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-<<<<<<< HEAD
-              SizedBox(height: 20),
-              _isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : OutlinedButton(
-                onPressed: _signUp,
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Color(0xFFF5F5DC)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-                ),
-                child: Text(
-                  'Sign Up',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'BebasNeue',
-                    color: Color(0xFFF5F5DC),
-                  ),
-                ),
-              ),
-            ],
-          ),
-=======
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Phone Number',  // Added phone number input
-                border: OutlineInputBorder(),
+      backgroundColor: Colors.black,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 100),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Image.asset(
+                'assets/images/login_banner.jpeg',
+                width: MediaQuery.of(context).size.width * 0.7,
+                fit: BoxFit.cover,
               ),
             ),
-            SizedBox(height: 16),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-              onPressed: _signUp,
-              child: Text('Sign Up'),
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                children: [
+                  _buildTextField(_emailController, 'Email'),
+                  SizedBox(height: 20),
+                  _buildTextField(_usernameController, 'Username'),
+                  SizedBox(height: 20),
+                  _buildTextField(_passwordController, 'Password', obscureText: true),
+                  SizedBox(height: 40),
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(
+                    onPressed: _signUp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF99C448),
+                      padding: EdgeInsets.symmetric(vertical: 14, horizontal: 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Sign Up',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    },
+                    child: Text(
+                      "Already have an account? Log In!",
+                      style: TextStyle(color: Color(0xFF99C448), fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
->>>>>>> 0d971ea886a46c4c8adca327e22306e9078b47e5
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hintText, {bool obscureText = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[600],
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF8C8C8C),
+            blurRadius: 4,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.white54),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.grey[800],
         ),
       ),
     );

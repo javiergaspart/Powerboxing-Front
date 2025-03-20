@@ -24,6 +24,9 @@ class AuthService {
     if (response.statusCode == 200) {
       var userJson = json.decode(response.body);
       User user = User.fromJson(userJson['user']);
+      if (user.id.isEmpty) {
+        print("Warning: User ID is missing from backend response.");
+      }
       print('Login successful');
       return user;
     } else {
@@ -33,8 +36,8 @@ class AuthService {
   }
 
   // Sign up user with added phone number
-  Future<User> signUp(String username, String email, String password, String phone) async {
-    print('SignUp called with email: $email, username: $username, phone: $phone');
+  Future<User> signUp(String username, String email, String password) async {
+    print('SignUp called with email: $email, username: $username');
     final url = Uri.parse('${AppUrls.baseUrl}/auth/register');
     print('Making POST request to $url');
     final response = await http.post(
@@ -46,7 +49,6 @@ class AuthService {
         'username': username,
         'email': email,
         'password': password,
-        'phone': phone,  // Added phone number here
       }),
     );
 

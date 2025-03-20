@@ -16,115 +16,48 @@ class _ReservationScreenState extends State<ReservationScreen> {
 
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
-  Session? _selectedSession;
   int _selectedSlotIndex = -1;
   List<DateTime> _availableSlots = [];
 
   void _generateAvailableSlots() {
     _availableSlots = [];
     DateTime now = DateTime.now();
-
-    // Determine the start time based on the selected date
-    DateTime startTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      9,
-      0,
-    );
-
-    // If the selected date is today, start from the current time rounded to the nearest 30 minutes
-    if (_selectedDate.year == now.year &&
-        _selectedDate.month == now.month &&
-        _selectedDate.day == now.day) {
-      if (now.hour < 9 || (now.hour == 9 && now.minute == 0)) {
-        startTime = DateTime(now.year, now.month, now.day, 9, 0); // Start from 9 AM
-      } else {
-        int minutes = now.minute;
-        int roundedMinutes = (minutes % 30 == 0)
-            ? minutes
-            : (minutes ~/ 30 + 1) * 30;
-        startTime = DateTime(now.year, now.month, now.day, now.hour, roundedMinutes);
-      }
-
-      // Ensure the start time does not go past 6 PM
-      if (startTime.hour >= 18) {
-        _availableSlots = [];
-        return; // No slots available for the rest of the day
-      }
+    DateTime startTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 9, 0);
+    if (_selectedDate.isAtSameMomentAs(DateTime(now.year, now.month, now.day))) {
+      int roundedMinutes = now.minute % 30 == 0 ? now.minute : (now.minute ~/ 30 + 1) * 30;
+      startTime = DateTime(now.year, now.month, now.day, now.hour, roundedMinutes);
+      if (startTime.hour >= 18) return;
     }
-
-    // End time is always 6 PM
-    DateTime endTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      18,
-      0,
-    );
-
-    // Generate slots in 30-minute intervals starting from 9 AM to 6 PM
+    DateTime endTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 18, 0);
     while (startTime.isBefore(endTime)) {
-      // Only add slots from the current time or later
-      if (_selectedDate.year == now.year &&
-          _selectedDate.month == now.month &&
-          _selectedDate.day == now.day) {
-        if (startTime.isAfter(now)) {
-          _availableSlots.add(startTime);
-        }
-      } else {
+      if (_selectedDate.isAfter(now) || startTime.isAfter(now)) {
         _availableSlots.add(startTime);
       }
-
       startTime = startTime.add(Duration(minutes: 30));
     }
   }
 
-
-
   Future<void> _bookReservation(String location) async {
     if (_selectedSlotIndex == -1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a time slot first.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please select a time slot first.')));
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      // Fetch the user from the provider
       final user = Provider.of<user_provider.UserProvider>(context, listen: false).user;
-      print("user");
-      if(user!=null){
-        print("not null");
-        print(user.id);
-      }
-
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No user logged in!')),
-        );
-        return; // Stop execution if user is null
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No user logged in!')));
+        return;
       }
-
-      // Convert selected date to string in the required format (e.g., "2024-12-10")
       String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
       String slotTiming = DateFormat.jm().format(_availableSlots[_selectedSlotIndex]);
-
-      // Proceed with booking using the new service function
-      String userId = user.id.toString();
-      print(userId);
       bool success = await _reservationService.reserveOrCreateSession(
-        userId: userId,
+        userId: user.id.toString(),
         slotTimings: slotTiming,
         location: location,
         date: formattedDate,
         instructor: 'Default Instructor',
       );
-
       if (success) {
         Navigator.push(
           context,
@@ -136,18 +69,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create reservation')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create reservation')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create reservation: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create reservation: $e')));
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -160,94 +87,69 @@ class _ReservationScreenState extends State<ReservationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Reserve a Session')),
+      backgroundColor: Color(0xFF151718),
+      appBar: AppBar(
+        title: Text('Reserve a Session'),
+        backgroundColor: Colors.black,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              'Select a session to reserve',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Select Date:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(30, (index) {
-                  DateTime date = DateTime.now().add(Duration(days: index));
-                  bool isSelected = date.day == _selectedDate.day &&
-                      date.month == _selectedDate.month &&
-                      date.year == _selectedDate.year;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedDate = date;
-                        _generateAvailableSlots();
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.blue : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isSelected ? Colors.blue : Colors.grey,
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            DateFormat('EEE').format(date),
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          Text(
-                            DateFormat('MMM d').format(date),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                DateTime date = DateTime.now().add(Duration(days: index));
+                bool isSelected = _selectedDate == date;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = date;
+                      _generateAvailableSlots();
+                    });
+                  },
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 5),
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: isSelected ? Colors.green : Colors.grey),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  );
-                }),
-              ),
+                    child: Column(
+                      children: [
+                        Text(DateFormat('EEE').format(date),
+                            style: TextStyle(color: isSelected ? Colors.green : Colors.white)),
+                        Text('${date.day}',
+                            style: TextStyle(color: isSelected ? Colors.green : Colors.white)),
+                      ],
+                    ),
+                  ),
+                );
+              }),
             ),
-            SizedBox(height: 16),
-            Text('Available Time Slots:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Expanded(
               child: ListView.builder(
                 itemCount: _availableSlots.length,
                 itemBuilder: (context, index) {
                   final slot = _availableSlots[index];
-                  return ListTile(
-                    title: Text(DateFormat.jm().format(slot)),
-                    trailing: _selectedSlotIndex == index
-                        ? Icon(Icons.check, color: Colors.green)
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        _selectedSlotIndex = index;
-                      });
-                    },
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedSlotIndex = index),
+                    child: Container(
+                      margin: EdgeInsets.symmetric(vertical: 8),
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _selectedSlotIndex == index ? Colors.green : Colors.grey[800],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        DateFormat.jm().format(slot),
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ),
                   );
                 },
               ),
             ),
-            SizedBox(height: 16),
             _isLoading
                 ? CircularProgressIndicator()
                 : ElevatedButton(
@@ -260,28 +162,13 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Select a location for the session:'),
                           DropdownButton<String>(
                             value: 'Hyderabad',
-                            onChanged: (value) {
-                              if (value != null) {
-                                _bookReservation(value);
-                                Navigator.pop(context);
-                              }
-                            },
-                            items: ['Hyderabad'].map((location) {
-                              return DropdownMenuItem<String>(
-                                value: location,
-                                child: Text(location),
-                              );
-                            }).toList(),
+                            onChanged: (value) => _bookReservation(value ?? 'Hyderabad'),
+                            items: ['Hyderabad'].map((location) => DropdownMenuItem(value: location, child: Text(location))).toList(),
                           ),
-                          SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: () {
-                              _bookReservation('Hyderabad');
-                              Navigator.pop(context);
-                            },
+                            onPressed: () => _bookReservation('Hyderabad'),
                             child: Text('Book Reservation'),
                           ),
                         ],

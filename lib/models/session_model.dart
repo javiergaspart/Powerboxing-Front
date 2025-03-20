@@ -1,59 +1,66 @@
+import 'dart:convert';
+
 class Session {
   final String id;
+  final DateTime date; // Changed from String to DateTime
+  final String slotTimings;
   final String location;
-  final DateTime date;
-  final String slotTimings; // Added to match backend
   final String instructor;
-  final List<String> bookedUsers; // User IDs for booked users
-  final List<String> punchingBags; // IDs for punching bags
-  final DateTime createdAt; // Session creation timestamp
-  int availableSlots; // Made mutable by removing 'final'
-  final int totalSlots; // Kept as 'final' since it is not modified
+  final List<String> bookedUsers;
+  final List<String> punchingBags;
+  final bool isCompleted;
+  final String time;
+  final String username;
+  final DateTime createdAt;
+  int availableSlots; // Changed to non-final to allow decrementing
+  final int totalSlots;
 
   Session({
     required this.id,
-    required this.location,
     required this.date,
     required this.slotTimings,
+    required this.location,
     required this.instructor,
     required this.bookedUsers,
     required this.punchingBags,
+    required this.isCompleted,
+    required this.time,
+    required this.username,
     required this.createdAt,
-    this.availableSlots = 0,
-    this.totalSlots = 20, // Default total slots
+    required this.availableSlots,
+    required this.totalSlots,
   });
 
-  // Convert JSON to Session object
   factory Session.fromJson(Map<String, dynamic> json) {
+    print("Raw session JSON: $json");
+
     return Session(
-      id: json['_id'],
-      location: json['location'],
+      id: json['_id'] ?? '',
       date: DateTime.parse(json['date']),
-      slotTimings: json['slotTimings'],
-      instructor: json['instructor'] ?? 'Unknown Instructor',
-      bookedUsers: json['bookedUsers'] != null
-          ? (json['bookedUsers'] as List)
-          .map((user) => user['_id'] as String) // Extract user IDs
-          .toList()
-          : [],
+      slotTimings: json['slotTimings'] ?? '',
+      location: json['location'] ?? '',
+      instructor: json['instructor'] ?? '',
+      bookedUsers: (json['bookedUsers'] as List)
+          .map((user) => user['username'].toString()) // Extract usernames
+          .toList(),
       punchingBags: List<String>.from(json['punchingBags'] ?? []),
+      isCompleted: json['isCompleted'] ?? false,
+      time: json['slotTimings'] ?? '',
+      username: json['username'] ?? '',
       createdAt: DateTime.parse(json['createdAt']),
-      availableSlots: json.containsKey('bookedUsers')
-          ? (20 - (json['bookedUsers']?.length ?? 0)).toInt() // Explicit cast
-          : 20,
-      totalSlots: 20, // Default as backend doesn't specify total slots
+      availableSlots: json['availableSlots'] ?? 0,
+      totalSlots: json['totalSlots'] ?? 0,
     );
   }
 
 
 
-  // Convert Session object to JSON
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
-      'location': location,
-      'date': date.toIso8601String(),
+      'date': date.toIso8601String(), // Fix: Convert DateTime to String
       'slotTimings': slotTimings,
+      'location': location,
       'instructor': instructor,
       'bookedUsers': bookedUsers,
       'punchingBags': punchingBags,
@@ -63,22 +70,17 @@ class Session {
     };
   }
 
-  // Getter for session status
+  // Fix: Getter for session status
   String get status {
     final now = DateTime.now();
     return date.isAfter(now) ? "Upcoming" : "Past";
   }
 
-  // Check if the session has available slots
-  bool get isAvailable {
-    return availableSlots > 0;
-  }
-
-  // Reserve a slot (used when a user books a session)
+  // Fix: Setter for decrementing availableSlots
   void reserveSlot(String userId) {
-    if (isAvailable) {
+    if (availableSlots > 0) {
       bookedUsers.add(userId);
-      availableSlots--; // Now this will work
+      availableSlots--; // Now works because it's not final
     }
   }
 }

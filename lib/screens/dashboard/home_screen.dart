@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import '../../services/session_service.dart';
 import '../../models/session_model.dart';
 import '../../models/user_model.dart';
+import 'package:provider/provider.dart';
+import 'package:fitboxing_app/providers/user_provider.dart';
 import 'package:intl/intl.dart';
 import '../../styles/styles.dart';
 import './reservation_screen.dart';
-import '../navbar/settings_screen.dart';
+import '../auth/login_screen.dart';
 import '../navbar/my_profile_screen.dart';
 import '../navbar/contact_us_screen.dart';
+import '../navbar/membership_screen.dart';
+import './results_screen.dart';
+import './settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final User user;
+  final User? user;
 
   const HomeScreen({Key? key, required this.user}) : super(key: key);
 
@@ -22,300 +27,379 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Future<List<Session>> _upcomingSessions;
   late Future<List<Session>> _previousSessions;
   late TabController _tabController;
-  late AnimationController _animationController;
-  late Animation<Offset> _sidebarAnimation;
-  bool _isSidebarOpen = false;
+  bool _isPopupOpen = false;
+  int _selectedIndex = 0; // Track the selected tab
+
+  late final List<Widget> _screens; // Declare without initializing
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;  // Change selected index when tapped
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    _screens = [
+      HomeScreen(user: widget.user),  // Pass user parameter
+      SettingsScreen(),  // Settings Screen
+      MyProfileScreen(user: widget.user!),
+    ];
     _tabController = TabController(length: 2, vsync: this);
-    _upcomingSessions = SessionService().getUpcomingSessions(widget.user.id);
-    _previousSessions = SessionService().getPreviousSessions(widget.user.id);
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 300),
-    );
-
-    _sidebarAnimation = Tween<Offset>(
-      begin: Offset(-1.0, 0.0),
-      end: Offset(0.0, 0.0),
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+    final userId = widget.user?.id;
+    _upcomingSessions =
+    userId != null ? SessionService().getUpcomingSessions(userId) : Future
+        .value([]);
+    _previousSessions =
+    userId != null ? SessionService().getPreviousSessions(userId) : Future
+        .value([]);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarOpen = !_isSidebarOpen;
-      if (_isSidebarOpen) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    });
-  }
-
-  void _navigateToPage(String page) {
-    print("Navigating to: $page");
-    // Add your navigation logic here.
+  String getFirstName(String? fullName) {
+    if (fullName == null || fullName.isEmpty) return "Guest";
+    return fullName.split(" ").first; // Splitting at the first space
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final updatedUser = userProvider.user ?? User.defaultUser(); // Ensure user is never null
     return Scaffold(
-      backgroundColor: Color(0xFF0A3D2D),
-      appBar: AppBar(
-        backgroundColor: Color(0xFFF5F5DC),
-        title: Row(
+      backgroundColor: Colors.black,
+      body: _buildScreen(updatedUser),  // Display the selected screen
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildHomeContent(User updatedUser) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset('assets/images/logo.png', height: 40),
-            SizedBox(width: 10),
-            Text(
-              'Powerboxing',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            const SizedBox(height: 40),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                      "WELCOME BACK, ${getFirstName(updatedUser?.username).toUpperCase() ?? 'GUEST'}!",
+                      style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'RobotoCondensed',
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF2C2C2C),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.notifications, color: Colors.white),
+                    onPressed: () {},
+                  ),
+                ),
+              ],
             ),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.menu, color: Colors.black),
-              onPressed: _toggleSidebar,
+            const SizedBox(height: 20),
+            _buildChallengeCard(),
+            const SizedBox(height: 20),
+            _buildSessionSection("Previous Sessions", _previousSessions, context),
+            const SizedBox(height: 60),
+            _buildSessionSection("Upcoming Sessions", _upcomingSessions, context),
+            const SizedBox(height: 20),
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ReservationScreen()),
+                  );
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF280D36), Color(0xFF480876)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Reserve Session",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             ),
+            const SizedBox(height: 20),
+            _buildAchievementsSection(),
+            const SizedBox(height: 30),
           ],
         ),
       ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              // User Profile Row
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        // Handle profile photo change
-                      },
-                      child: Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey, width: 1),
-                          shape: BoxShape.rectangle,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(5),
-                          child: Image.asset('assets/images/profile_photo.jpg', fit: BoxFit.cover),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          border: Border(bottom: BorderSide(color: Colors.grey, width: 1.5)),
-                        ),
-                        child: Text(
-                          widget.user.username.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w300,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              // TabBar Header
-              TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(text: 'Summary'),
-                  Tab(text: 'Previous Sessions'),
-                ],
-                labelColor: Colors.white,
-                indicatorColor: Colors.white,
-              ),
-              // TabBarView with cards at the top in Summary tab
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    FutureBuilder<List<Session>>(
-                      future: _upcomingSessions,
-                      builder: (context, snapshot) {
-                        String nextSession = 'None';
-                        String sessionDate = '';
-                        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                          nextSession = snapshot.data![0].location;
-                          sessionDate = DateFormat('yyyy-MM-dd').format(snapshot.data![0].date);
-                        }
-                        return SingleChildScrollView(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 16, left: 16, right: 16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildCard('Next Session: $nextSession', sessionDate, 'Reserve Session'),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Expanded(
-                                      child: _buildCard('Available Sessions: 0', '', 'Become a Member'),
-                                    ),
-                                  ],
-                                ),
-                                // Future rows can be added here later
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    Center(child: Text('Previous Sessions Placeholder', style: TextStyle(color: Colors.white))),
-                  ],
-                ),
-              ),
-              // Footer
-              SingleChildScrollView(
-                child: Container(
-                  width: double.infinity,
-                  color: Colors.grey[200],
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('© 2025 Powerboxing. All rights reserved.', style: TextStyle(color: Colors.black54)),
-                      SizedBox(height: 5),
-                      Text('Website: www.powerboxing.fun', style: TextStyle(color: Colors.black54)),
-                      SizedBox(height: 5),
-                      Text('Name: Javier Gaspert', style: TextStyle(color: Colors.black54)),
-                      SizedBox(height: 5),
-                      Text('Contact: info@powerboxing.com', style: TextStyle(color: Colors.black54)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+    );
+  }
+
+  Widget _buildSessionCard(Session session) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Color(0xFF151718),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF24292A),
+            offset: Offset(0, 4),
+            blurRadius: 6,
           ),
-          // Sidebar
-          SlideTransition(
-            position: _sidebarAnimation,
-            child: Container(
-              width: 250,
-              color: Color(0xFFF5F5DC),
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 175,
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
-                    ),
-                    child: TextButton(
-                      onPressed: () => _navigateToPage('Profile'),
-                      child: Text(
-                        'Profile',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 175,
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
-                    ),
-                    child: TextButton(
-                      onPressed: () => _navigateToPage('Payments'),
-                      child: Text(
-                        'Payments',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 175,
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
-                    ),
-                    child: TextButton(
-                      onPressed: () => _navigateToPage('Contact Us'),
-                      child: Text(
-                        'Help',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 175,
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Color(0xFF0A3D2D), width: 2)),
-                    ),
-                    child: TextButton(
-                      onPressed: () => _navigateToPage('Settings'),
-                      child: Text(
-                        'Settings',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: Color(0xFF0A3D2D)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              Colors.white.withOpacity(0.3),
+              BlendMode.modulate,
             ),
+            child: Image.asset(
+                'assets/images/sessions.jpeg', width: double.infinity,
+                height: 100,
+                fit: BoxFit.cover),
+          ),
+          SizedBox(height: 10),
+          Text(session.location, style: TextStyle(
+              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(DateFormat('dd MMM, yyyy').format(session.date),
+              style: TextStyle(color: Colors.grey, fontSize: 14)),
+          Text("Instructor: ${session.instructor}",
+              style: TextStyle(color: Colors.grey, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChallengeCard() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF280D36), Color(0xFF480876)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Today's Challenge",
+            style: TextStyle(
+                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Color(0xFF2C2C2C),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Icon(Icons.arrow_forward, color: Colors.white, size: 20),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCard(String title, String subtitle, String buttonText) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double width = constraints.maxWidth;
-        double height = width * 1.25; // Maintain aspect ratio of 1.25
+  Widget _buildSessionSection(String title, Future<List<Session>> sessions, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        FutureBuilder<List<Session>>(
+          future: sessions,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return const Text("Error fetching sessions", style: TextStyle(color: Colors.red));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Text("No sessions available", style: TextStyle(color: Colors.white));
+            } else {
+              return Column(
+                children: snapshot.data!.map((session) {
+                  return Container(
+                    width: double.infinity, // Matches the width of today's challenge card
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF151718),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0xFF24292A),
+                          offset: Offset(0, 4),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            'assets/images/sessions.jpeg',
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                session.location,
+                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                session.instructor,
+                                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                              ),
+                              const SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2C2C2C),
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.timer, color: Colors.white, size: 16),
+                                        SizedBox(width: 4),
+                                        Text("20 min", style: TextStyle(color: Colors.white, fontSize: 14)),
+                                      ],
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFF2C2C2C),
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+                                      final updatedUser = userProvider.user;
+                                      String username = updatedUser?.username ?? "UNKNOWN USER";
 
-        return Container(
-          width: width,
-          height: height,
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Color(0xFFF5F5DC),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(title, style: TextStyle(color: Colors.black)),
-              if (subtitle.isNotEmpty) Text(subtitle, style: TextStyle(color: Colors.black)),
-              SizedBox(height: 3),
-              OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Color(0xFF0A3D2D)),
-                ),
-                child: Text(buttonText, style: TextStyle(color: Color(0xFF0A3D2D))),
-              ),
-            ],
-          ),
-        );
-      },
+                                      print("Navigating with username: $username");
+
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ResultScreen(
+                                            sessionId: session.id,
+                                            location: session.location,
+                                            date: DateFormat('yyyy-MM-dd').format(session.date),
+                                            time: session.time,
+                                            username: username,
+                                            instructor: session.instructor,
+                                            isCompleted: session.isCompleted,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      "Details",
+                                      style: TextStyle(color: Color(0xFFA4D037), fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            }
+          },
+        ),
+      ],
     );
   }
+
+  Widget _buildReserveSessionSection() {
+    return Text("Reserve Session", style: TextStyle(
+        color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold));
+  }
+
+  Widget _buildAchievementsSection() {
+    return Text("Achievements", style: TextStyle(
+        color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold));
+  }
+
+  Widget _buildBottomNavBar() {
+    return BottomNavigationBar(
+      backgroundColor: Colors.black,
+      selectedItemColor: Colors.green,
+      unselectedItemColor: Colors.white,
+      currentIndex: _selectedIndex,  // Ensure the correct tab is highlighted
+      onTap: _onItemTapped,  // Handle taps
+      items: [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+        BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+      ],
+    );
+  }
+  Widget _buildScreen(User updatedUser) {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildHomeContent(updatedUser);  // Provide a default user
+      case 1:
+        return SettingsScreen();
+      case 2:
+        return MyProfileScreen(user: widget.user ?? User.defaultUser());
+      default:
+        return HomeScreen(user: widget.user ?? User.defaultUser());
+    }
+  }
+
 }

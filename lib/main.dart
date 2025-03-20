@@ -1,52 +1,61 @@
-import 'package:fitboxing_app/screens/dashboard/reservation_successful_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:fitboxing_app/screens/auth/login_screen.dart';
-import 'package:fitboxing_app/screens/dashboard_screen.dart';
+import 'package:fitboxing_app/screens/dashboard/home_screen.dart';
 import 'package:fitboxing_app/screens/dashboard/reservation_screen.dart';
 import 'package:fitboxing_app/screens/membership_screen.dart';
 import 'package:fitboxing_app/screens/session_result_screen.dart';
-import 'package:fitboxing_app/utils/constants.dart';
-import 'package:provider/provider.dart';
+
 import 'package:fitboxing_app/providers/auth_provider.dart';
-import 'package:fitboxing_app/providers/user_provider.dart';  // Import the UserProvider
+import 'package:fitboxing_app/providers/user_provider.dart';
+import 'package:fitboxing_app/models/user_model.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => UserProvider(), // Initialize the provider here
-      child: MyApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+      ],
+      child: const MyApp(),
     ),
   );
 }
 
-
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(  // Use MultiProvider to provide both AuthProvider and UserProvider
-      providers: [
-        ChangeNotifierProvider(create: (context) => AuthProvider()),  // AuthProvider
-        ChangeNotifierProvider(create: (context) => UserProvider()),  // UserProvider
-      ],
-      child: MaterialApp(
-        title: AppConstants.appName,
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        initialRoute: '/',
-        routes: {
-          '/': (context) => LoginScreen(),
-          '/dashboard': (context) => DashboardScreen(),
-          '/reservation': (context) => ReservationScreen(),
-          '/membership': (context) => MembershipScreen(),
-          '/session-results': (context) {
-            // Retrieve sessionId from the route arguments
-            final sessionId = ModalRoute.of(context)?.settings.arguments as String;
-            return SessionResultScreen(sessionId: sessionId);
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final user = userProvider.user ?? User.defaultUser(); // Ensures non-null user
+
+        return MaterialApp(
+          title: 'FitBoxing App',
+          theme: ThemeData(primarySwatch: Colors.blue),
+          home: user.id != '0' ? HomeScreen(user: user) : LoginScreen(),
+          routes: {
+            '/dashboard': (context) {
+              final user = Provider.of<UserProvider>(context, listen: false).user ?? User.defaultUser();
+              return user.id != '0' ? HomeScreen(user: user) : LoginScreen();
+            },
+            '/reservation': (context) => ReservationScreen(),
+            '/membership': (context) => MembershipScreen(),
+            '/session-results': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments;
+              if (args is String) {
+                return SessionResultScreen(sessionId: args);
+              } else {
+                return const Scaffold(
+                  body: Center(child: Text("Invalid session ID")),
+                );
+              }
+            },
           },
-        },
-      ),
+        );
+      },
     );
   }
 }

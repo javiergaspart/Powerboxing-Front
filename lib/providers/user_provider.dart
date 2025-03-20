@@ -8,14 +8,14 @@ class UserProvider with ChangeNotifier {
   User? get user => _user;
 
   // Method to set the user, possibly after login
-  void setUser(User newUser) {
-    _user = newUser;
+  void setUser(User updatedUser) {
+    _user = updatedUser;
     notifyListeners();  // Notify listeners that the user data has changed
   }
 
-  // Optionally, you can add a method to clear user data when logging out
-  void clearUser() {
-    _user = null;
+  void logout() {
+    _user = null; // Clear the user data
     notifyListeners();
   }
+
 }
