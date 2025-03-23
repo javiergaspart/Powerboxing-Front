@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:fitboxing_app/screens/auth/login_screen.dart';
+import 'package:fitboxing_app/screens/auth/forgot_password_screen.dart'; // Ensure this import exists
 import 'package:fitboxing_app/screens/dashboard/home_screen.dart';
 import 'package:fitboxing_app/screens/dashboard/reservation_screen.dart';
-import 'package:fitboxing_app/screens/membership_screen.dart';
+import 'package:fitboxing_app/screens/dashboard/membership_screen.dart';
 import 'package:fitboxing_app/screens/session_result_screen.dart';
+import 'package:fitboxing_app/screens/auth/change_password_screen.dart'; // Ensure this import exists
 
 import 'package:fitboxing_app/providers/auth_provider.dart';
 import 'package:fitboxing_app/providers/user_provider.dart';
@@ -34,9 +36,14 @@ class MyApp extends StatelessWidget {
 
         return MaterialApp(
           title: 'FitBoxing App',
-          theme: ThemeData(primarySwatch: Colors.blue),
           home: user.id != '0' ? HomeScreen(user: user) : LoginScreen(),
           routes: {
+            '/login': (context) => LoginScreen(), // Explicitly added login route
+            '/forgot-password': (context) => ForgotPasswordScreen(), // Ensure it's registered
+            '/change-password': (context) {
+              final userId = Provider.of<UserProvider>(context, listen: false).user?.id ?? '';
+              return ChangePasswordScreen(userId: userId);
+            },
             '/dashboard': (context) {
               final user = Provider.of<UserProvider>(context, listen: false).user ?? User.defaultUser();
               return user.id != '0' ? HomeScreen(user: user) : LoginScreen();

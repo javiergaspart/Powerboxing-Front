@@ -10,9 +10,11 @@ import './reservation_screen.dart';
 import '../auth/login_screen.dart';
 import '../navbar/my_profile_screen.dart';
 import '../navbar/contact_us_screen.dart';
-import '../navbar/membership_screen.dart';
 import './results_screen.dart';
 import './settings_screen.dart';
+import './previous_session_screen.dart';
+import './membership_screen.dart';
+import './notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final User? user;
@@ -41,20 +43,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
     _screens = [
-      HomeScreen(user: widget.user),  // Pass user parameter
-      SettingsScreen(),  // Settings Screen
+      HomeScreen(user: widget.user), // Pass user parameter
+      SettingsScreen(), // Settings Screen
       MyProfileScreen(user: widget.user!),
     ];
+
     _tabController = TabController(length: 2, vsync: this);
+
     final userId = widget.user?.id;
-    _upcomingSessions =
-    userId != null ? SessionService().getUpcomingSessions(userId) : Future
-        .value([]);
-    _previousSessions =
-    userId != null ? SessionService().getPreviousSessions(userId) : Future
-        .value([]);
+
+    if (userId != null) {
+      _fetchSessions(userId);
+    } else {
+      _upcomingSessions = Future.value([]);
+      _previousSessions = Future.value([]);
+    }
   }
+
+  void _fetchSessions(String userId) async {
+    _upcomingSessions = SessionService().getUpcomingSessions(userId);
+    _previousSessions = SessionService().getPreviousSessions(userId);
+
+    setState(() {}); // Ensure UI updates after fetching data
+  }
+
 
   @override
   void dispose() {
@@ -109,8 +123,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   child: IconButton(
                     icon: Icon(Icons.notifications, color: Colors.white),
-                    onPressed: () {},
-                  ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => NotificationsScreen()),
+                      );
+                    },                  ),
                 ),
               ],
             ),
@@ -204,37 +222,107 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildChallengeCard() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF280D36), Color(0xFF480876)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            "Today's Challenge",
-            style: TextStyle(
-                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Container(
-            width: 30,
-            height: 30,
+    return FutureBuilder<List<Session>>(
+      future: _upcomingSessions,
+      builder: (context, snapshot) {
+        Session? todayChallenge;
+
+        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          DateTime today = DateTime.now();
+          print("📅 Today's Date: ${today.toLocal()}");
+
+          // Print all session dates to verify data
+          for (var session in snapshot.data!) {
+            print("📝 Session Date: ${session.date.toLocal()} (Session ID: ${session.id})");
+          }
+
+          List<Session> todaySessions = snapshot.data!
+              .where((session) {
+            DateTime sessionDate = session.date.toLocal();
+            bool isToday = sessionDate.year == today.year &&
+                sessionDate.month == today.month &&
+                sessionDate.day == today.day;
+
+            if (isToday) {
+              print("✅ Found Matching Session: ${session.id}");
+            }
+
+            return isToday;
+          })
+              .toList();
+
+          if (todaySessions.isNotEmpty) {
+            todayChallenge = todaySessions.first;
+          } else {
+            print("❌ No Challenge Found for Today.");
+          }
+        } else {
+          print("⚠️ No upcoming sessions available.");
+        }
+
+        return GestureDetector(
+          onTap: () {
+            if (todayChallenge != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ResultScreen(
+                    sessionId: todayChallenge!.id,
+                    location: todayChallenge!.location,
+                    date: DateFormat('yyyy-MM-dd').format(todayChallenge!.date),
+                    time: todayChallenge!.time,
+                    instructor: todayChallenge!.instructor,
+                    isCompleted: todayChallenge!.isCompleted,
+                    username: widget.user?.username ?? "Guest",
+                  ),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("No challenges today."),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Color(0xFF2C2C2C),
-              borderRadius: BorderRadius.circular(5),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF280D36), Color(0xFF480876)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Today's Challenge",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C2C2C),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+
 
   Widget _buildSessionSection(String title, Future<List<Session>> sessions, BuildContext context) {
     return Column(
@@ -247,6 +335,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         FutureBuilder<List<Session>>(
           future: sessions,
           builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data!.length > 2 && title == "Previous Sessions") {
+              return GestureDetector(
+                onTap: () {
+                  // Navigate to a new screen showing all previous sessions
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PreviousSessionsScreen(previousSessions: snapshot.data!),
+                    ),
+                  );
+                },
+                child: Text(
+                  "See All",
+                  style: TextStyle(
+                    color: Color(0xFFA4D037),
+                    decoration: TextDecoration.underline,
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            }
+            return SizedBox(); // Return an empty widget if not needed
+          },
+        ),
+        FutureBuilder<List<Session>>(
+          future: sessions,
+          builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const CircularProgressIndicator();
             } else if (snapshot.hasError) {
@@ -254,8 +369,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Text("No sessions available", style: TextStyle(color: Colors.white));
             } else {
+              List<Session> displayedSessions = snapshot.data!.take(2).toList();
               return Column(
-                children: snapshot.data!.map((session) {
+                children: displayedSessions.map((session) {
                   return Container(
                     width: double.infinity, // Matches the width of today's challenge card
                     margin: const EdgeInsets.only(bottom: 10),
@@ -374,19 +490,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Text("Achievements", style: TextStyle(
         color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold));
   }
-
   Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      backgroundColor: Colors.black,
-      selectedItemColor: Colors.green,
-      unselectedItemColor: Colors.white,
-      currentIndex: _selectedIndex,  // Ensure the correct tab is highlighted
-      onTap: _onItemTapped,  // Handle taps
-      items: [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      ],
+    return Container(
+      color: Colors.black,  // Ensures black background
+      child: BottomNavigationBar(
+        backgroundColor: Colors.black,
+        selectedItemColor: Color(0xFFA4D037),
+        unselectedItemColor: Colors.white,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,  // Prevents default background color issues
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(icon: Icon(Icons.star), label: "Membership"),
+        ],
+      ),
     );
   }
   Widget _buildScreen(User updatedUser) {
@@ -397,6 +517,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return SettingsScreen();
       case 2:
         return MyProfileScreen(user: widget.user ?? User.defaultUser());
+      case 3:
+        return MembershipScreen();
       default:
         return HomeScreen(user: widget.user ?? User.defaultUser());
     }

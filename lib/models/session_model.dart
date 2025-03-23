@@ -83,4 +83,18 @@ class Session {
       availableSlots--; // Now works because it's not final
     }
   }
+  Session.empty()
+      : id = '',
+        date = DateTime.now(),
+        slotTimings = '',
+        location = '',
+        instructor = '',
+        bookedUsers = [],
+        punchingBags = [],
+        isCompleted = false,
+        time = '',
+        username = '',
+        createdAt = DateTime.now(),
+        availableSlots = 0,
+        totalSlots = 0;
 }

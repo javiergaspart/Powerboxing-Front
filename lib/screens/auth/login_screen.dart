@@ -4,6 +4,7 @@ import '../../models/user_model.dart';
 import '../../providers/user_provider.dart' as user_provider;
 import '../dashboard/home_screen.dart';
 import './signup_screen.dart';
+import './forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
@@ -145,7 +146,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                   SizedBox(height: 20),
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+                      );
+                    },
                     child: Text(
                       'Forgot Password?',
                       style: TextStyle(color: Colors.white, fontSize: 16),

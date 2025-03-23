@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fitboxing_app/providers/user_provider.dart';
 import 'package:fitboxing_app/screens/auth/login_screen.dart';
+import 'package:fitboxing_app/screens/auth/change_password_screen.dart';
+import './home_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   @override
@@ -13,7 +15,18 @@ class SettingsScreen extends StatelessWidget {
         title: Text("Settings", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HomeScreen(user: Provider.of<UserProvider>(context, listen: false).user),
+                ),
+              );
+            }
+          },
         ),
       ),
       body: Padding(
@@ -23,9 +36,16 @@ class SettingsScreen extends StatelessWidget {
             _buildSettingsItem(context, "Personal Information", Icons.person, () {
               // Navigate to Personal Information Screen
             }),
-            _buildSettingsItem(context, "Password", Icons.lock, () {
-              // Navigate to Password Change Screen
+            _buildSettingsItem(context, "Change Password", Icons.lock, () {
+              // Navigate to Change Password Screen
+              String userId = Provider.of<UserProvider>(context, listen: false).user?.id ?? '';
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChangePasswordScreen(userId: userId)),
+              );
             }),
+
             _buildSettingsItem(context, "Language", Icons.language, () {
               // Navigate to Language Selection Screen
             }),
@@ -81,11 +101,13 @@ class SettingsScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Provider.of<UserProvider>(context, listen: false).logout();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                      (route) => false,
-                );
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                        (route) => false,
+                  );
+                }
               },
               child: Text("Logout", style: TextStyle(color: Colors.redAccent)),
             ),

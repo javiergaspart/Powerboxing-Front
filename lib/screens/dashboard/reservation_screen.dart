@@ -51,12 +51,17 @@ class _ReservationScreenState extends State<ReservationScreen> {
       }
       String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
       String slotTiming = DateFormat.jm().format(_availableSlots[_selectedSlotIndex]);
+      int totalSlots = 10;
+      String sessionTime = slotTiming;
+
       bool success = await _reservationService.reserveOrCreateSession(
         userId: user.id.toString(),
         slotTimings: slotTiming,
         location: location,
         date: formattedDate,
         instructor: 'Default Instructor',
+        totalSlots: totalSlots,
+        time: sessionTime,
       );
       if (success) {
         Navigator.push(
@@ -89,44 +94,61 @@ class _ReservationScreenState extends State<ReservationScreen> {
     return Scaffold(
       backgroundColor: Color(0xFF151718),
       appBar: AppBar(
-        title: Text('Reserve a Session'),
+        title: Text('Reserve a Session', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: Column( // Added 'child: Column()' to fix the error
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                DateTime date = DateTime.now().add(Duration(days: index));
-                bool isSelected = _selectedDate == date;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedDate = date;
-                      _generateAvailableSlots();
-                    });
-                  },
-                  child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 5),
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: isSelected ? Colors.green : Colors.grey),
-                      borderRadius: BorderRadius.circular(10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(6, (index) {
+                  DateTime date = DateTime.now().add(Duration(days: index));
+                  bool isSelected = _selectedDate.day == date.day &&
+                      _selectedDate.month == date.month &&
+                      _selectedDate.year == date.year;
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedDate = date;
+                        _generateAvailableSlots();
+                      });
+                    },
+                    child: Container(
+                      width: 60,
+                      margin: EdgeInsets.symmetric(horizontal: 5),
+                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Color(0xFF99C448) : Colors.transparent,
+                        border: Border.all(color: isSelected ? Color(0xFF99C448) : Colors.grey),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            DateFormat('EEE').format(date),
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            '${date.day}',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        Text(DateFormat('EEE').format(date),
-                            style: TextStyle(color: isSelected ? Colors.green : Colors.white)),
-                        Text('${date.day}',
-                            style: TextStyle(color: isSelected ? Colors.green : Colors.white)),
-                      ],
-                    ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
+            SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
                 itemCount: _availableSlots.length,
@@ -138,7 +160,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       margin: EdgeInsets.symmetric(vertical: 8),
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: _selectedSlotIndex == index ? Colors.green : Colors.grey[800],
+                        color: _selectedSlotIndex == index ? Color(0xFF99C448) : Colors.grey[800],
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -153,23 +175,52 @@ class _ReservationScreenState extends State<ReservationScreen> {
             _isLoading
                 ? CircularProgressIndicator()
                 : ElevatedButton(
-              onPressed: () {
+              onPressed: (_selectedSlotIndex == -1) ? null : () {
                 showDialog(
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: Text('Select Location'),
+                      backgroundColor: Colors.black,
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Confirm Reservation',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white, fontSize: 20),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Icon(Icons.close, color: Colors.white),
+                          ),
+                        ],
+                      ),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          DropdownButton<String>(
-                            value: 'Hyderabad',
-                            onChanged: (value) => _bookReservation(value ?? 'Hyderabad'),
-                            items: ['Hyderabad'].map((location) => DropdownMenuItem(value: location, child: Text(location))).toList(),
+                          Text(
+                            'Location: Hyderabad',
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
                           ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Selected Slot: ${DateFormat.jm().format(_availableSlots[_selectedSlotIndex])}',
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: () => _bookReservation('Hyderabad'),
-                            child: Text('Book Reservation'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF99C448),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                            ),
+                            child: Text('Confirm', style: TextStyle(fontSize: 18)),
                           ),
                         ],
                       ),
@@ -177,8 +228,19 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   },
                 );
               },
-              child: Text('Proceed to Book'),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Color(0xFF99C448)), // Ensures green color
+                foregroundColor: MaterialStateProperty.all(Colors.white), // Ensures white text
+                padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 14, horizontal: 40)),
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              child: Text('Reserve',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
             ),
+            SizedBox(height: 16),
           ],
         ),
       ),

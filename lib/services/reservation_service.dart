@@ -11,6 +11,8 @@ class ReservationService {
     required String location,
     required String date,
     required String instructor,
+    required int totalSlots,
+    required String time,
   }) async {
     print("userid" + userId);
     print(slotTimings);
@@ -26,6 +28,8 @@ class ReservationService {
         'location': location,
         'date': date,
         'instructor': instructor,
+        'totalSlots': totalSlots,
+        'time': time,
       }),
       headers: {'Content-Type': 'application/json'},
     );

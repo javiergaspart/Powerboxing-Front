@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:fitboxing_app/services/password_service.dart'; // Ensure this file exists
 
 class ForgotPasswordScreen extends StatefulWidget {
   @override
@@ -7,34 +7,61 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _authService = AuthService();
-  final _emailController = TextEditingController();
-  bool _isLoading = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
-  // Function to handle forgot password request
-  Future<void> _forgotPassword() async {
-    setState(() {
-      _isLoading = true;
-    });
+  bool _otpSent = false;
+  String _error = '';
+  String _success = '';
 
-    try {
-      await _authService.forgotPassword(_emailController.text);
+  Future<void> _sendOtp() async {
+    String email = _emailController.text;
+    var response = await PasswordService.sendResetOTP(email);
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password reset link sent!')),
-      );
-
-      // Optionally, navigate to login screen after success
-      Navigator.pop(context);
-    } catch (e) {
-      // Show error message if the request fails
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send reset link: ${e.toString()}')),
-      );
-    } finally {
+    if (response['success']) {
       setState(() {
-        _isLoading = false;
+        _otpSent = true;
+        _success = 'OTP sent successfully';
+        _error = '';
+      });
+    } else {
+      setState(() {
+        _error = response['message'] ?? 'Error sending OTP';
+        _success = '';
+      });
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    String email = _emailController.text;
+    String otp = _otpController.text;
+    String newPassword = _newPasswordController.text;
+    String confirmPassword = _confirmPasswordController.text;
+
+    if (newPassword != confirmPassword) {
+      setState(() {
+        _error = 'Passwords do not match';
+        _success = '';
+      });
+      return;
+    }
+
+    var response = await PasswordService.resetPassword(email, otp, newPassword);
+
+    if (response['success']) {
+      setState(() {
+        _success = 'Password reset successfully';
+        _error = '';
+      });
+      Future.delayed(Duration(seconds: 2), () {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
+    } else {
+      setState(() {
+        _error = response['message'] ?? 'Error resetting password';
+        _success = '';
       });
     }
   }
@@ -42,28 +69,73 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Forgot Password')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Text("Forgot Password", style: TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      backgroundColor: Color(0xFF151718),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 15),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
+            _buildTextField('Email', _emailController, false),
+            if (_otpSent) ...[
+              _buildTextField('OTP', _otpController, false),
+              _buildTextField('New Password', _newPasswordController, true),
+              _buildTextField('Confirm Password', _confirmPasswordController, true),
+            ],
+            SizedBox(height: 10),
+            if (_error.isNotEmpty) Text(_error, style: TextStyle(color: Colors.red)),
+            if (_success.isNotEmpty) Text(_success, style: TextStyle(color: Color(0xFF99C448))),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: _otpSent ? _resetPassword : _sendOtp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  side: BorderSide(color: Color(0xFF9ACD32)),
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                child: Text(
+                  _otpSent ? 'Reset Password' : 'Send OTP',
+                  style: TextStyle(color: Color(0xFF9ACD32), fontSize: 18),
+                ),
               ),
             ),
-            SizedBox(height: 16),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _forgotPassword,
-                    child: Text('Reset Password'),
-                  ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, bool obscureText) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+          SizedBox(height: 5),
+          TextField(
+            controller: controller,
+            obscureText: obscureText,
+            style: TextStyle(color: Colors.white, fontSize: 16),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Color(0xFF555555),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ],
       ),
     );
   }

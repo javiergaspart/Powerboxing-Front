@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fitboxing_app/models/user_model.dart';
-import 'package:fitboxing_app/providers/user_provider.dart' as user_provider;
+import 'package:fitboxing_app/providers/user_provider.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import '../dashboard/home_screen.dart';
 
 class MyProfileScreen extends StatefulWidget {
   final User user;
@@ -56,7 +57,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         email: responseData['user']['email'],
         phone: responseData['user']['phone'],
       );
-      Provider.of<user_provider.UserProvider>(context, listen: false).setUser(newUser);
+      Provider.of<UserProvider>(context, listen: false).setUser(newUser);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Profile updated successfully!")));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to update profile.")));
@@ -97,7 +98,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         String imageUrl = await uploadImage(file);
         if (imageUrl.isNotEmpty) {
           final updatedUser = widget.user.copyWith(profileImage: imageUrl);
-          Provider.of<user_provider.UserProvider>(context, listen: false).setUser(updatedUser);
+          Provider.of<UserProvider>(context, listen: false).setUser(updatedUser);
         }
       } catch (e) {
         print("Error updating image: $e");
@@ -114,13 +115,22 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: Color(0xFF0A3D2D),
+        backgroundColor: Color(0xFF151718),
         appBar: AppBar(
-          backgroundColor: Color(0xFF0A3D2D),
+          backgroundColor: Colors.black,
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.white, size: 30, weight: 900),
             onPressed: () {
-              Navigator.of(context).pop();
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(user: Provider.of<UserProvider>(context, listen: false).user),
+                  ),
+                );
+              }
             },
           ),
           title: Text('My Profile', style: TextStyle(color: Colors.white)),
@@ -129,93 +139,143 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           children: [
             SizedBox(height: 20),
             Center(
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300, width: 3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Consumer<user_provider.UserProvider>(
-                  builder: (context, userProvider, child) {
-                    final user = userProvider.user;
-                    return ClipRRect(
+              child: Column(
+                children: [
+                  Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300, width: 3),
                       borderRadius: BorderRadius.circular(8),
-                      child: (user?.profileImage ?? '').isNotEmpty
-                          ? (user!.profileImage!.startsWith('http')
-                          ? Image.network(user.profileImage!, width: 100, height: 100, fit: BoxFit.cover)
-                          : Image.network('http://10.0.2.2:5173/fitboxing${user.profileImage!}', width: 100, height: 100, fit: BoxFit.cover))
-                          : Image.asset('assets/images/anonymous.png', width: 100, height: 100, fit: BoxFit.cover),
-                    );
-                  },
-                ),
+                    ),
+                    child: Consumer<UserProvider>(
+                      builder: (context, userProvider, child) {
+                        final user = userProvider.user;
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: (user?.profileImage ?? '').isNotEmpty
+                              ? (user!.profileImage!.startsWith('http')
+                              ? Image.network(user.profileImage!, width: 100, height: 100, fit: BoxFit.cover)
+                              : Image.network('http://10.0.2.2:5173/fitboxing${user.profileImage!}', width: 100, height: 100, fit: BoxFit.cover))
+                              : Image.asset('assets/images/anonymous.png', width: 100, height: 100, fit: BoxFit.cover),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    widget.user.username.toUpperCase(),
+                    style: TextStyle(color: Color(0xFF99C448), fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 20),
             Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        'Username',
+                        style: TextStyle(
+                          fontFamily: 'Roboto Condensed',
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 5),
                       TextField(
                         controller: _nameController,
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Color(0xFFF5F5DC),
-                          labelText: 'Username',
+                          fillColor: Color(0xFF767575),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          floatingLabelBehavior: FloatingLabelBehavior.auto, // Hides label when text is entered
+                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                      SizedBox(height: 45),
+                      Text(
+                        'Email',
+                        style: TextStyle(
+                          fontFamily: 'Roboto Condensed',
+                          fontSize: 20,
+                          color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 5),
                       TextField(
                         controller: _emailController,
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Color(0xFFF5F5DC),
-                          labelText: 'Email',
+                          fillColor: Color(0xFF767575),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          floatingLabelBehavior: FloatingLabelBehavior.auto, // Hides label when text is entered
+                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                      SizedBox(height: 45),
+                      Text(
+                        'Contact',
+                        style: TextStyle(
+                          fontFamily: 'Roboto Condensed',
+                          fontSize: 20,
+                          color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 5),
                       TextField(
                         controller: _contactController,
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Color(0xFFF5F5DC),
-                          labelText: 'Contact',
+                          fillColor: Color(0xFF767575),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          floatingLabelBehavior: FloatingLabelBehavior.auto, // Hides label when text is entered
+                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                      SizedBox(height: 45),
+                      Text(
+                        'Password',
+                        style: TextStyle(
+                          fontFamily: 'Roboto Condensed',
+                          fontSize: 20,
+                          color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 5),
                       TextField(
                         controller: _passwordController,
                         obscureText: true,
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Color(0xFFF5F5DC),
-                          labelText: 'Password',
+                          fillColor: Color(0xFF767575),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          floatingLabelBehavior: FloatingLabelBehavior.auto, // Hides label when text is entered
                         ),
+                        style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
+                      SizedBox(height: 45),
+                      Center(
+                      child: ElevatedButton(
                         onPressed: _updateProfile,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF0A3D2D),
-                          foregroundColor: Color(0xFFF5F5DC),
-                          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                          backgroundColor: Color(0xFF99C448),
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 14, horizontal: 30),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Color(0xFFF5F5DC)),
                           ),
                         ),
-                        child: Text('Update Profile', style: TextStyle(fontSize: 18)),
+                        child: Text(
+                          'Update Profile',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
+                    ),
                     ],
                   ),
                 ),
