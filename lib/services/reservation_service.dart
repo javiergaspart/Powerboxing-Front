@@ -48,13 +48,15 @@ class ReservationService {
       }),
       headers: {'Content-Type': 'application/json'},
     );
+    print("Response: ${response.statusCode}");
+    print("Response: ${response.body}");
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final responseData = json.decode(response.body);
-      int newBalance = responseData['newBalance']; // Get updated balance from backend
-
-      // Update session balance in frontend state
-      userProvider.updateSessionBalance(newBalance);
+      if (responseData.containsKey('newBalance')) {
+        int newBalance = responseData['newBalance'];
+        userProvider.updateSessionBalance(newBalance);
+      }
 
       return true; // Reservation successful
     } else {
