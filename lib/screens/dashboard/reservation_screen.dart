@@ -5,6 +5,10 @@ import '../../services/reservation_service.dart';
 import '../../models/session_model.dart';
 import '../../providers/user_provider.dart' as user_provider;
 import 'reservation_successful_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../constants/urls.dart';
 
 class ReservationScreen extends StatefulWidget {
   @override
@@ -19,23 +23,47 @@ class _ReservationScreenState extends State<ReservationScreen> {
   int _selectedSlotIndex = -1;
   List<DateTime> _availableSlots = [];
 
-  void _generateAvailableSlots() {
-    _availableSlots = [];
-    DateTime now = DateTime.now();
-    DateTime startTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 9, 0);
-    if (_selectedDate.isAtSameMomentAs(DateTime(now.year, now.month, now.day))) {
-      int roundedMinutes = now.minute % 30 == 0 ? now.minute : (now.minute ~/ 30 + 1) * 30;
-      startTime = DateTime(now.year, now.month, now.day, now.hour, roundedMinutes);
-      if (startTime.hour >= 18) return;
-    }
-    DateTime endTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 18, 0);
-    while (startTime.isBefore(endTime)) {
-      if (_selectedDate.isAfter(now) || startTime.isAfter(now)) {
-        _availableSlots.add(startTime);
+  Future<void> _fetchAvailableSlots() async {
+    final String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final response = await http.get(
+      Uri.parse('${AppUrls.baseUrl}/sessions/all-slots?date=$formattedDate'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['success'] == true) {
+        setState(() {
+          _availableSlots = List.generate(data['data'].length, (index) {
+            final timeStr = data['data'][index]['slotTiming'].toString().replaceAll(RegExp(r'\s+'), ' ').trim();
+            final parts = timeStr.split(' ');
+            final timeParts = parts[0].split(':');
+            int hour = int.parse(timeParts[0]);
+            int minute = int.parse(timeParts[1]);
+
+            if (parts[1].toUpperCase() == 'PM' && hour != 12) hour += 12;
+            if (parts[1].toUpperCase() == 'AM' && hour == 12) hour = 0;
+
+            return DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              hour,
+              minute,
+            );
+          });
+        });
+      } else {
+        setState(() {
+          _availableSlots = [];
+        });
       }
-      startTime = startTime.add(Duration(minutes: 30));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch slots')),
+      );
     }
   }
+
 
   Future<void> _bookReservation(String location) async {
     if (_selectedSlotIndex == -1) {
@@ -55,6 +83,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
       String sessionTime = slotTiming;
 
       bool success = await _reservationService.reserveOrCreateSession(
+        context: context,
         userId: user.id.toString(),
         slotTimings: slotTiming,
         location: location,
@@ -86,11 +115,14 @@ class _ReservationScreenState extends State<ReservationScreen> {
   @override
   void initState() {
     super.initState();
-    _generateAvailableSlots();
+    _fetchAvailableSlots();
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<user_provider.UserProvider>(context, listen: false).user;
+    int availableSessions = user?.sessionBalance ?? 0;
+
     return Scaffold(
       backgroundColor: Color(0xFF151718),
       appBar: AppBar(
@@ -105,7 +137,18 @@ class _ReservationScreenState extends State<ReservationScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column( // Added 'child: Column()' to fix the error
           children: [
-            SingleChildScrollView(
+          Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+            child: Text(
+              'Available Sessions: $availableSessions',
+              style: GoogleFonts.robotoCondensed(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +162,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                     onTap: () {
                       setState(() {
                         _selectedDate = date;
-                        _generateAvailableSlots();
+                        _fetchAvailableSlots();
                       });
                     },
                     child: Container(
@@ -155,7 +198,9 @@ class _ReservationScreenState extends State<ReservationScreen> {
                 itemBuilder: (context, index) {
                   final slot = _availableSlots[index];
                   return GestureDetector(
-                    onTap: () => setState(() => _selectedSlotIndex = index),
+                    onTap: () {
+                      setState(() => _selectedSlotIndex = index);
+                    },
                     child: Container(
                       margin: EdgeInsets.symmetric(vertical: 8),
                       padding: EdgeInsets.all(16),

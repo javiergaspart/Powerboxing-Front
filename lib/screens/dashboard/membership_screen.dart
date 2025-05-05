@@ -9,10 +9,10 @@ class MembershipScreen extends StatelessWidget {
 
   void _purchaseSessions(BuildContext context, int sessionsBought) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userId = userProvider.user.id;
+    final userId = userProvider.user?.id ?? ''; // Use null-check and provide a fallback
 
     try {
-      await membershipService.purchaseMembership(userId, sessionsBought);
+      await membershipService.purchaseSessions(userId, sessionsBought);
       userProvider.updateSessionBalance(sessionsBought);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Successfully purchased $sessionsBought sessions!')),

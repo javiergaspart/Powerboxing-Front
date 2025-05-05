@@ -6,34 +6,53 @@ import '../constants/urls.dart';
 class AuthService {
   // Login user
   Future<User> login(String email, String password) async {
-    print('Login called with email: $email');
-    final url = Uri.parse('${AppUrls.baseUrl}/auth/login');
-    print('Making POST request to $url');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'email': email,
-        'password': password,
-      }),
-    );
+    try {
+      print('🔹 Login called with email: $email');
 
-    print('Response received: ${response.statusCode}, Body: ${response.body}');
-    if (response.statusCode == 200) {
-      var userJson = json.decode(response.body);
-      User user = User.fromJson(userJson['user']);
-      if (user.id.isEmpty) {
-        print("Warning: User ID is missing from backend response.");
+      final url = Uri.parse('${AppUrls.baseUrl}/auth/login');
+      print('🌍 Making POST request to: $url');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'password': password}),
+      );
+
+      print('📩 Response received: Status Code = ${response.statusCode}');
+      print('🔍 Response Headers: ${response.headers}');
+      print('📝 Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          var userJson = json.decode(response.body);
+          if (userJson['user'] == null) {
+            print('⚠️ Warning: "user" field missing in response.');
+            throw Exception('Invalid response: Missing user data.');
+          }
+
+          User user = User.fromJson(userJson['user']);
+
+          if (user.id.isEmpty) {
+            print('⚠️ Warning: User ID is missing from backend response.');
+          }
+
+          print('✅ Login successful for user: ${user.username}');
+          return user;
+        } catch (e) {
+          print('❌ Error parsing JSON response: $e');
+          throw Exception('Failed to parse login response.');
+        }
+      } else {
+        print('🚨 Login failed with status: ${response.statusCode}');
+        print('🛑 Server Response: ${response.body}');
+        throw Exception('Login failed: ${response.body}');
       }
-      print('Login successful');
-      return user;
-    } else {
-      print('Login failed');
-      throw Exception('Failed to login');
+    } catch (e) {
+      print('❗ Exception during login: $e');
+      throw Exception('Login failed: $e');
     }
   }
+
 
   // Sign up user with added phone number
   Future<User> signUp(String username, String email, String password) async {

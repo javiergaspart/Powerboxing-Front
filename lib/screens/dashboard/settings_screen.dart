@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:fitboxing_app/providers/user_provider.dart';
 import 'package:fitboxing_app/screens/auth/login_screen.dart';
 import 'package:fitboxing_app/screens/auth/change_password_screen.dart';
+import 'package:fitboxing_app/screens/navbar/my_profile_screen.dart';
+import 'package:fitboxing_app/screens/navbar/contact_us_screen.dart';
+import 'package:fitboxing_app/screens/navbar/help_screen.dart';
 import './home_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -34,7 +37,18 @@ class SettingsScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildSettingsItem(context, "Personal Information", Icons.person, () {
-              // Navigate to Personal Information Screen
+              final user = Provider.of<UserProvider>(context, listen: false).user;
+              if (user != null) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyProfileScreen(user: user)),
+                );
+              } else {
+                // Handle the case when the user is null (e.g., show a message or redirect)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("User not found. Please log in again.")),
+                );
+              }
             }),
             _buildSettingsItem(context, "Change Password", Icons.lock, () {
               // Navigate to Change Password Screen
@@ -53,7 +67,17 @@ class SettingsScreen extends StatelessWidget {
               // Navigate to Payment Screen
             }),
             _buildSettingsItem(context, "Contact Us", Icons.mail, () {
-              // Navigate to Contact Support Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ContactUsScreen()),
+              );
+            }),
+            _buildSettingsItem(context, "Help & Info", Icons.help_outline, () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HelpScreen()),
+              );
             }),
             _buildSettingsItem(context, "Log out", Icons.exit_to_app, () {
               _confirmLogout(context);

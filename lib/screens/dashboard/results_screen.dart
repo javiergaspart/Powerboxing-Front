@@ -9,6 +9,7 @@ import '../../styles/styles.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../models/result_model.dart';
+import '../../constants/urls.dart';
 
 class ResultScreen extends StatefulWidget {
   final String sessionId;
@@ -55,7 +56,7 @@ class _ResultScreenState extends State<ResultScreen> {
   Future<List<PunchResult>> fetchPunchResult(String sessionId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5173/fitboxing/results/session/$sessionId'),
+        Uri.parse('${AppUrls.baseUrl}/results/session/$sessionId'),
       );
 
       if (response.statusCode == 200) {

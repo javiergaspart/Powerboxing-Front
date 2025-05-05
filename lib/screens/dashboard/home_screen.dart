@@ -365,6 +365,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const CircularProgressIndicator();
             } else if (snapshot.hasError) {
+              print("❌ Session fetch error: ${snapshot.error}");
               return const Text("Error fetching sessions", style: TextStyle(color: Colors.red));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Text("No sessions available", style: TextStyle(color: Colors.white));

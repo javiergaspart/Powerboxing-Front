@@ -24,7 +24,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _contactController;
-  late TextEditingController _passwordController;
 
   @override
   void initState() {
@@ -32,7 +31,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     _nameController = TextEditingController(text: widget.user.username);
     _emailController = TextEditingController(text: widget.user.email);
     _contactController = TextEditingController(text: widget.user.phone);
-    _passwordController = TextEditingController();
   }
 
   Future<void> _updateProfile() async {
@@ -40,7 +38,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       "username": _nameController.text,
       "email": _emailController.text,
       "phone": _contactController.text,
-      if (_passwordController.text.isNotEmpty) "password": _passwordController.text,
     };
 
     var uri = Uri.parse("${AppUrls.updateProfile}/${widget.user.id}");
@@ -97,8 +94,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       try {
         String imageUrl = await uploadImage(file);
         if (imageUrl.isNotEmpty) {
-          final updatedUser = widget.user.copyWith(profileImage: imageUrl);
-          Provider.of<UserProvider>(context, listen: false).setUser(updatedUser);
+          setState(() {
+            final updatedUser = widget.user.copyWith(profileImage: imageUrl);
+            Provider.of<UserProvider>(context, listen: false).setUser(updatedUser);
+          });
         }
       } catch (e) {
         print("Error updating image: $e");
@@ -139,7 +138,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           children: [
             SizedBox(height: 20),
             Center(
-              child: Column(
+              child: Stack(
                 children: [
                   Container(
                     width: 160,
@@ -155,17 +154,23 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                           borderRadius: BorderRadius.circular(8),
                           child: (user?.profileImage ?? '').isNotEmpty
                               ? (user!.profileImage!.startsWith('http')
-                              ? Image.network(user.profileImage!, width: 100, height: 100, fit: BoxFit.cover)
-                              : Image.network('http://10.0.2.2:5173/fitboxing${user.profileImage!}', width: 100, height: 100, fit: BoxFit.cover))
-                              : Image.asset('assets/images/anonymous.png', width: 100, height: 100, fit: BoxFit.cover),
+                              ? Image.network(user.profileImage!, width: 160, height: 160, fit: BoxFit.cover)
+                              : Image.network('${AppUrls.baseUrl}/${user.profileImage!}', width: 160, height: 160, fit: BoxFit.cover))
+                              : Image.asset('assets/images/anonymous.png', width: 160, height: 160, fit: BoxFit.cover),
                         );
                       },
                     ),
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    widget.user.username.toUpperCase(),
-                    style: TextStyle(color: Color(0xFF99C448), fontSize: 20, fontWeight: FontWeight.bold),
+                  Positioned(
+                    bottom: 5,
+                    right: 5,
+                    child: InkWell(
+                      onTap: _updateProfileImage,
+                      child: CircleAvatar(
+                        backgroundColor: Colors.black54,
+                        child: Icon(Icons.edit, color: Colors.white, size: 20),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -227,26 +232,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       SizedBox(height: 5),
                       TextField(
                         controller: _contactController,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0xFF767575),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                      SizedBox(height: 45),
-                      Text(
-                        'Password',
-                        style: TextStyle(
-                          fontFamily: 'Roboto Condensed',
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: true,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Color(0xFF767575),

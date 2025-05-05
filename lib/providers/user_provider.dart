@@ -13,6 +13,14 @@ class UserProvider with ChangeNotifier {
     notifyListeners();  // Notify listeners that the user data has changed
   }
 
+  void updateSessionBalance(int sessionsBought) {
+    if (_user != null) {
+      _user = _user!.copyWith(sessionBalance: _user!.sessionBalance + sessionsBought);
+      notifyListeners();
+    }
+  }
+
+
   void logout() {
     _user = null; // Clear the user data
     notifyListeners();

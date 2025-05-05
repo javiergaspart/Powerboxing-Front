@@ -1,29 +1,39 @@
 name: fitboxing_app
 description: A new Flutter project
 
-publish_to: 'none' # Remove this line if you're planning to publish
+publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"  # Add this line to specify the SDK version constraint
+  sdk: ">=3.5.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  dio: ^5.1.0  # You can adjust this version if needed
+  dio: ^5.1.0
   http: ^1.2.2
-  intl: ^0.20.1
+  intl: ^0.18.0
   provider: ^6.1.2
   image_picker: ^1.1.2
   flutter_secure_storage: ^9.2.2
-  flutter_animated_icons: ^1.0.0 # Added the flutter_animated_icons dependency
-
-  # Add other dependencies here
+  flutter_animated_icons: ^1.0.0
+  google_fonts: ^6.2.1
+  url_launcher: ^6.2.5
+  flutter_vector_icons: ^2.0.0 # modern icon package with WhatsApp etc.
+  fl_chart: ^0.64.0
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/Powerboxing_Logo.jpg"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/Powerboxing_Logo.jpg"
 
 flutter:
   uses-material-design: true

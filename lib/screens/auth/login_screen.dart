@@ -5,6 +5,7 @@ import '../../providers/user_provider.dart' as user_provider;
 import '../dashboard/home_screen.dart';
 import './signup_screen.dart';
 import './forgot_password_screen.dart';
+import './trainer_login_screen.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
@@ -165,6 +166,22 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     child: Text(
                       "Don't have an account? Sign Up",
                       style: TextStyle(color: Color(0xFF99C448), fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => TrainerLoginScreen()),
+                      );
+                    },
+                    child: Text(
+                      "Login as Trainer",
+                      style: TextStyle(
+                        color: Color(0xFF99C448),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
