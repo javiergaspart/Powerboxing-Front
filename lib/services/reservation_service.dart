@@ -12,7 +12,7 @@ class ReservationService {
   Future<bool> reserveOrCreateSession({
     required BuildContext context, // Pass context from UI
     required String userId,
-    required String slotTimings,
+    required String slotTiming,
     required String location,
     required String date,
     required String instructor,
@@ -20,7 +20,7 @@ class ReservationService {
     required String time,
   }) async {
     print("UserID: $userId");
-    print("Slot Timings: $slotTimings");
+    print("Slot Timings: $slotTiming");
     print("Date: $date");
     print("Location: $location");
     print("Instructor: $instructor");
@@ -39,7 +39,7 @@ class ReservationService {
       url,
       body: json.encode({
         'userId': userId,
-        'slotTimings': slotTimings,
+        'slotTiming': slotTiming,
         'location': location,
         'date': date,
         'instructor': instructor,
@@ -55,6 +55,7 @@ class ReservationService {
       final responseData = json.decode(response.body);
       if (responseData.containsKey('newBalance')) {
         int newBalance = responseData['newBalance'];
+        print('DEBUG: Updating session balance from $newBalance');
         userProvider.updateSessionBalance(newBalance);
       }
 
@@ -141,7 +142,9 @@ class ReservationService {
       );
       return false;
     }
-  }// Function to get trainer's slots for a specific date
+  }
+
+  // Function to get trainer's slots for a specific date
   Future<List<DateTime>> getTrainerSlots(String trainerId, DateTime date) async {
     try {
       // Format the date to match the backend format

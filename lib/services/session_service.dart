@@ -14,6 +14,7 @@ class SessionService {
       final response = await http.get(
         Uri.parse('$baseUrl/sessions/upcoming?userId=$userId'), // Adjust endpoint as needed
       );
+      print("Raw API Response: ${response.body}");
 
       if (response.statusCode == 200) {
         print("Raw API Response: ${response.body}");

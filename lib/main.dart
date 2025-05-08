@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:fitboxing_app/screens/auth/login_screen.dart';
+import 'package:fitboxing_app/screens/auth/login_with_otp_screen.dart';
+import 'package:fitboxing_app/screens/auth/signup_with_otp_screen.dart';
 import 'package:fitboxing_app/screens/auth/forgot_password_screen.dart'; // Ensure this import exists
 import 'package:fitboxing_app/screens/dashboard/home_screen.dart';
 import 'package:fitboxing_app/screens/dashboard/reservation_screen.dart';
@@ -44,9 +45,10 @@ class MyApp extends StatelessWidget {
 
         return MaterialApp(
           title: 'FitBoxing App',
-          home: user.id != '0' ? HomeScreen(user: user) : LoginScreen(),
+          home: user.id != '0' ? HomeScreen(user: user) : LoginWithOtpScreen(),
           routes: {
-            '/login': (context) => LoginScreen(), // Explicitly added login route
+            '/login': (context) => LoginWithOtpScreen(), // Explicitly added login route
+            '/signup': (context) => SignupInputScreen(),
             '/forgot-password': (context) => ForgotPasswordScreen(), // Ensure it's registered
             '/change-password': (context) {
               final userId = Provider.of<UserProvider>(context, listen: false).user?.id ?? '';
@@ -54,7 +56,7 @@ class MyApp extends StatelessWidget {
             },
             '/dashboard': (context) {
               final user = Provider.of<UserProvider>(context, listen: false).user ?? User.defaultUser();
-              return user.id != '0' ? HomeScreen(user: user) : LoginScreen();
+              return user.id != '0' ? HomeScreen(user: user) : LoginWithOtpScreen();
             },
             '/reservation': (context) => ReservationScreen(),
             '/membership': (context) => MembershipScreen(),

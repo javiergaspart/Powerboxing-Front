@@ -31,38 +31,68 @@ class _ReservationScreenState extends State<ReservationScreen> {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+
       if (data['success'] == true) {
+        final rawSlots = data['data'];
+        print("Fetched ${rawSlots.length} raw slots from API:");
+        for (var slot in rawSlots) {
+          print(" - ${slot['slotTiming']}");
+        }
+
+        final parsedSlots = List.generate(rawSlots.length, (index) {
+          final timeStr = rawSlots[index]['slotTiming']
+              .toString()
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+          final parts = timeStr.split(' ');
+          final timeParts = parts[0].split(':');
+          int hour = int.parse(timeParts[0]);
+          int minute = int.parse(timeParts[1]);
+
+          if (parts[1].toUpperCase() == 'PM' && hour != 12) hour += 12;
+          if (parts[1].toUpperCase() == 'AM' && hour == 12) hour = 0;
+
+          final slotTime = DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day,
+            hour,
+            minute,
+          );
+
+          print("Parsed slot: $timeStr → $slotTime");
+
+          return slotTime;
+        });
+
+        // Check for duplicates
+        final seen = <String>{};
+        for (var dt in parsedSlots) {
+          final iso = dt.toIso8601String();
+          if (seen.contains(iso)) {
+            print("⚠️ Duplicate found: $iso");
+          } else {
+            seen.add(iso);
+          }
+        }
+
         setState(() {
-          _availableSlots = List.generate(data['data'].length, (index) {
-            final timeStr = data['data'][index]['slotTiming'].toString().replaceAll(RegExp(r'\s+'), ' ').trim();
-            final parts = timeStr.split(' ');
-            final timeParts = parts[0].split(':');
-            int hour = int.parse(timeParts[0]);
-            int minute = int.parse(timeParts[1]);
-
-            if (parts[1].toUpperCase() == 'PM' && hour != 12) hour += 12;
-            if (parts[1].toUpperCase() == 'AM' && hour == 12) hour = 0;
-
-            return DateTime(
-              _selectedDate.year,
-              _selectedDate.month,
-              _selectedDate.day,
-              hour,
-              minute,
-            );
-          });
+          _availableSlots = parsedSlots;
         });
       } else {
         setState(() {
           _availableSlots = [];
         });
+        print("API returned success: false");
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to fetch slots')),
       );
+      print("Failed to fetch slots. Status: ${response.statusCode}");
     }
   }
+
 
 
   Future<void> _bookReservation(String location) async {
@@ -85,7 +115,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
       bool success = await _reservationService.reserveOrCreateSession(
         context: context,
         userId: user.id.toString(),
-        slotTimings: slotTiming,
+        slotTiming: slotTiming,
         location: location,
         date: formattedDate,
         instructor: 'Default Instructor',

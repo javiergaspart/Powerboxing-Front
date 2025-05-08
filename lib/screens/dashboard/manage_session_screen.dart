@@ -55,6 +55,7 @@ class _ManageSessionScreenState extends State<ManageSessionScreen> {
       body: json.encode({'mappings': mappings}),
     );
 
+    print("Response: ${response.body}");
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mapping successful')));
     } else {

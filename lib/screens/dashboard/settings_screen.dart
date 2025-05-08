@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fitboxing_app/providers/user_provider.dart';
-import 'package:fitboxing_app/screens/auth/login_screen.dart';
+import 'package:fitboxing_app/screens/auth/login_with_otp_screen.dart';
 import 'package:fitboxing_app/screens/auth/change_password_screen.dart';
 import 'package:fitboxing_app/screens/navbar/my_profile_screen.dart';
 import 'package:fitboxing_app/screens/navbar/contact_us_screen.dart';
@@ -128,7 +128,7 @@ class SettingsScreen extends StatelessWidget {
                 if (context.mounted) {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    MaterialPageRoute(builder: (context) => LoginWithOtpScreen()),
                         (route) => false,
                   );
                 }

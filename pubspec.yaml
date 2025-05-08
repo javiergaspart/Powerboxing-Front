@@ -22,6 +22,7 @@ dependencies:
   url_launcher: ^6.2.5
   flutter_vector_icons: ^2.0.0 # modern icon package with WhatsApp etc.
   fl_chart: ^0.64.0
+  shared_preferences: ^2.0.15
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

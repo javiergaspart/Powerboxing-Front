@@ -253,6 +253,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           if (todaySessions.isNotEmpty) {
             todayChallenge = todaySessions.first;
+            print("Today Challenge: $todayChallenge");
           } else {
             print("❌ No Challenge Found for Today.");
           }
@@ -452,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             sessionId: session.id,
                                             location: session.location,
                                             date: DateFormat('yyyy-MM-dd').format(session.date),
-                                            time: session.time,
+                                            time: session.slotTimings,
                                             username: username,
                                             instructor: session.instructor,
                                             isCompleted: session.isCompleted,

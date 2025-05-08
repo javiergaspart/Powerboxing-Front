@@ -47,7 +47,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] ?? '',
+      id: json['_id'] ?? '',
       email: json['email'] ?? '',
       username: json['username'] ?? '',
       phone: json['phone'] ?? '',
@@ -87,5 +87,9 @@ class User {
       newcomer: true,
       sessionBalance: 0,
     );
+  }
+  @override
+  String toString() {
+    return 'User(id: $id, username: $username, email: $email, phone: $phone, newcomer: $newcomer, sessionBalance: $sessionBalance)';
   }
 }

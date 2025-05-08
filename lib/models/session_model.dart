@@ -37,7 +37,7 @@ class Session {
     return Session(
       id: json['_id'] ?? '',
       date: DateTime.parse(json['date']),
-      slotTimings: json['slotTimings'] ?? '',
+      slotTimings: json['slotTiming'] ?? '',
       location: json['location'] ?? '',
       instructor: json['instructor'] ?? '',
       bookedUsers: (json['bookedUsers'] as List)

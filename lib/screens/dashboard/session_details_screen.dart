@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import './manage_session_screen.dart';
+import './session_start_screen.dart';
 import '../../constants/urls.dart';
 
 class SessionDetailsScreen extends StatefulWidget {
@@ -97,9 +98,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen> {
                     ),
                   ),
                   onPressed: () {
-                    // TODO: Start session logic
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Starting session...")),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SessionScreen(),
+                      ),
                     );
                   },
                   child: const Text(

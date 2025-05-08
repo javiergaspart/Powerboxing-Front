@@ -36,22 +36,19 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  Future<List<PunchResult>>? punchResult; // Updated type
+  Future<List<PunchResult>>? punchResult;
   List<PunchResult> results = [];
-
 
   @override
   void initState() {
     super.initState();
     if (widget.isCompleted) {
       print("Fetching punch result for session: ${widget.sessionId}");
-      punchResult = fetchPunchResult(widget.sessionId); // Now it matches the type
+      punchResult = fetchPunchResult(widget.sessionId);
     } else {
       print("Session is not completed, skipping punch result fetch.");
     }
   }
-
-
 
   Future<List<PunchResult>> fetchPunchResult(String sessionId) async {
     try {
@@ -61,7 +58,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("API Response: $data"); // Debugging log
+        print("API Response: $data");
 
         if (data["success"] == true) {
           return (data["data"] as List)
@@ -78,24 +75,23 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF151718),
+      backgroundColor: const Color(0xFF151718),
       appBar: AppBar(
-        title: Text("Session Details", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text("Session Details",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Colors.white), // Set back arrow color to white
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(20),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 30),
+            const SizedBox(height: 20),
             _buildSessionDetails(),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             if (widget.isCompleted) _buildPunchResult(),
           ],
         ),
@@ -106,32 +102,52 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget _buildSessionDetails() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple.shade900, Colors.black],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.purpleAccent.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _styledText("LOCATION", widget.location.toUpperCase(), Colors.green, 18),
-          _styledText("DATE", widget.date, Colors.green, 18),
-          _styledText("TIME", widget.time, Colors.green, 18),
-          _styledText("INSTRUCTOR", widget.instructor.toUpperCase(), Colors.green, 18),
-          _styledText("USER", widget.username.toUpperCase(), Colors.green, 18),
+          _styledText("LOCATION", widget.location.toUpperCase()),
+          _styledText("DATE", widget.date),
+          _styledText("TIME", widget.time),
+          _styledText("INSTRUCTOR", widget.instructor.toUpperCase()),
+          _styledText("USER", widget.username.toUpperCase()),
         ],
       ),
     );
   }
 
-  Widget _styledText(String label, String value, Color color, double fontSize) {
+  Widget _styledText(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 10.0),
       child: RichText(
         text: TextSpan(
-          text: "$label : ",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: fontSize),
-          children: [TextSpan(text: value, style: TextStyle(color: color, fontSize: fontSize))],
+          text: "$label: ",
+          style: const TextStyle(
+            color: Colors.purpleAccent,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          children: [
+            TextSpan(
+              text: value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -142,25 +158,35 @@ class _ResultScreenState extends State<ResultScreen> {
       future: punchResult,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
         } else if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
-          return Text("No punch results available", style: TextStyle(color: Colors.red, fontSize: 18));
+          return const Text(
+            "No punch results available",
+            style: TextStyle(color: Colors.redAccent, fontSize: 18),
+          );
         } else {
-          final result = snapshot.data!.first; // Take the first result
+          final result = snapshot.data!.first;
           return Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.only(top: 10),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              color: Colors.black.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: [Colors.black, Colors.deepPurple.shade900],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(color: Colors.greenAccent.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6)),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 10),
-                _buildStatCard("ENERGY", result.accuracy.toStringAsFixed(2), "assets/images/energy.jpeg", iconSize: 42),
-                SizedBox(height: 20),
-                _buildStatCard("POWER", result.power.toInt().toString(), "assets/images/power.jpeg", iconSize: 42),
-                SizedBox(height: 20),
+                _buildStatCard("ENERGY", result.accuracy.toStringAsFixed(2), "assets/images/energy.jpeg"),
+                const SizedBox(height: 20),
+                _buildStatCard("POWER", result.power.toInt().toString(), "assets/images/power.jpeg"),
+                const SizedBox(height: 20),
                 _buildStatCard("ACCURACY", result.accuracy.toStringAsFixed(2), "assets/images/accuracy.jpeg"),
               ],
             ),
@@ -170,16 +196,20 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, String iconPath, {double iconSize = 40}) {
+  Widget _buildStatCard(String title, String value, String iconPath) {
     return Row(
       children: [
-        Image.asset(iconPath, width: iconSize, height: iconSize), // Adjusted icon size
-        SizedBox(width: 12), // Added slight spacing for better alignment
+        Image.asset(iconPath, width: 46, height: 46),
+        const SizedBox(width: 14),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(value, style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(title,
+                style: const TextStyle(
+                    color: Colors.purpleAccent, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+            Text(value,
+                style: const TextStyle(
+                    color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1)),
           ],
         ),
       ],
