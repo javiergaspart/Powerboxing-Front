@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     time: todayChallenge!.time,
                     instructor: todayChallenge!.instructor,
                     isCompleted: todayChallenge!.isCompleted,
-                    username: widget.user?.username ?? "Guest",
+                    username: Provider.of<UserProvider>(context, listen: false).user?.username ?? "Guest",
                   ),
                 ),
               );
@@ -442,6 +442,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     onPressed: () {
                                       final userProvider = Provider.of<UserProvider>(context, listen: false);
                                       final updatedUser = userProvider.user;
+                                      print("userProvider.user: ${userProvider.user}");
+                                      print("userProvider.user?.username: ${userProvider.user?.username}");
                                       String username = updatedUser?.username ?? "UNKNOWN USER";
 
                                       print("Navigating with username: $username");

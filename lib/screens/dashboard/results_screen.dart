@@ -206,7 +206,7 @@ class _ResultScreenState extends State<ResultScreen> {
           children: [
             Text(title,
                 style: const TextStyle(
-                    color: Colors.purpleAccent, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+                    color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
             Text(value,
                 style: const TextStyle(
                     color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1)),

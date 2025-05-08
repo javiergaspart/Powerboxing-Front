@@ -49,7 +49,9 @@ class User {
     return User(
       id: json['_id'] ?? '',
       email: json['email'] ?? '',
-      username: json['username'] ?? '',
+      username: (json['username'] != null && json['username'].toString().trim().isNotEmpty)
+          ? json['username']
+          : 'Guest',
       phone: json['phone'] ?? '',
       profileImage: json['profileImage'],
       membershipType: json['membershipType'],
